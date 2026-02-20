@@ -186,3 +186,4 @@ python manage.py startapp your_app_name apps/your_app_name
 | `DEBUG` | `True` | Debug mode |
 | `DB_ENGINE` | sqlite3 | Database engine |
 | `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | JWT access token lifetime |
+# activate
