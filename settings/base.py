@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     # Local apps  ← team members will add their apps here
     "apps.abstract",
     "apps.users",
+    "apps.team",
 
 
 ]
