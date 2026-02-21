@@ -12,7 +12,7 @@ from rest_framework.serializers import (
 
 # Project modules
 from .models import Team, TeamMembership
-from users.serializers import UserListSerializer
+from apps.users.serializers import UserListSerializer
 
 logger = logging.getLogger(__name__)
 

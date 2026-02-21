@@ -38,12 +38,12 @@ class Team(Model):
     members = ManyToManyField(
         CustomUser,
         through='TeamMembership',
-        related_name='teams'
+        related_name='members'
     )
 
     def __str__(self):
         """String representation of the Team model."""
-        return f"Team: {self.name}, Owner: {self.owner.username}"
+        return f"Team: {self.name}, Owner: {self.owner.first_name}"
     
     def to_presentation(self):
         """Convert the Team instance to a presentation format."""
@@ -51,8 +51,8 @@ class Team(Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'owner': self.owner.username,
-            'members': [member.username for member in self.members.all()]
+            'owner': self.owner.first_name,
+            'members': [member.first_name for member in self.members.all()]
         }
     
     class Meta:
@@ -95,7 +95,7 @@ class TeamMembership(Model):
 
     def __str__(self):
         """String representation of the TeamMembership model."""
-        return f"TeamMembership: {self.user.username} in {self.team.name}"
+        return f"TeamMembership: {self.user.first_name} in {self.team.name}"
     
     class Meta:
         verbose_name = "Team Membership"
