@@ -15,6 +15,8 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
+from .permissions import IsTeamOwnerOrAdmin, IsTeamMember
+
 # Project modules
 from .serializers import (
     TeamSerializer,
@@ -22,9 +24,12 @@ from .serializers import (
     UpdateTeamSerializer,
     TeamMembershipSerializer,
     CreateTeamMembershipSerializer,
-    UpdateTeamMembershipSerializer,
 )
 from .models import Team, TeamMembership
+from .permissions import (
+    IsTeamOwnerOrAdmin,
+    IsTeamMember
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +46,24 @@ class TeamViewSet(ViewSet):
         POST   api/teams/{id}/members/ - add member to team
     """
     #permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """Return permission instances based on action and HTTP method."""
+        # default: authenticated users
+        permission_classes = [IsAuthenticated]
+
+        # update and delete require owner or admin
+        if self.action in ['partial_update', 'destroy']:
+            permission_classes = [IsAuthenticated, IsTeamOwnerOrAdmin]
+
+        # members endpoint: GET -> team members, POST/DELETE -> owner/admin
+        if self.action == 'members':
+            if getattr(self, 'request', None) and self.request.method == 'GET':
+                permission_classes = [IsAuthenticated, IsTeamMember]
+            else:
+                permission_classes = [IsAuthenticated, IsTeamOwnerOrAdmin]
+
+        return [permission() for permission in permission_classes]
 
     def get_team_or_404(
         self, 
