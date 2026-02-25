@@ -30,6 +30,7 @@ from .permissions import (
     IsTeamOwnerOrAdmin,
     IsTeamMember
 )
+from .filters import build_team_q,build_membership_q
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class TeamViewSet(ViewSet):
         GET    api/teams/{id}/members/ - list members of team
         POST   api/teams/{id}/members/ - add member to team
     """
-    #permission_classes = [IsAuthenticated]
+    
 
     def get_permissions(self):
         """Return permission instances based on action and HTTP method."""
@@ -82,12 +83,17 @@ class TeamViewSet(ViewSet):
 
     def list(
         self, 
-        request: Request
+        request: Request    
     ) -> Response:
         """GET api/teams/ — list all teams"""
-        queryset = Team.objects.all().order_by('id')
+
+        conds = build_team_q(request)
+        queryset = Team.objects.filter(conds).order_by('id').distinct()
+
         serializer = TeamSerializer(queryset, many=True)
+
         logger.debug('Team list requested by user: %s', request.user.id)
+
         return Response(
             {
                 'message': 'List of teams',
@@ -248,11 +254,16 @@ class TeamViewSet(ViewSet):
         team: Team
     ) -> Response:
         """List of members"""
+
+        filtering = build_membership_q(request,team)
         memberships = TeamMembership.objects.filter(
-            team=team
+            filtering
+        ).select_related(
+            'user'
         ).prefetch_related(
             'members'
         )
+
         serializer = TeamMembershipSerializer(
             memberships, 
             many=True
@@ -261,6 +272,7 @@ class TeamViewSet(ViewSet):
             'Listed members: team=%s count=%s', 
             team.id, memberships.count()
         )
+
         return Response(
             {
                 'message': 'List of members',
