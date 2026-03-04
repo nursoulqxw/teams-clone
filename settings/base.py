@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "apps.abstract",
     "apps.users",
     "apps.team",
+    "apps.assigments"
 
 
 ]

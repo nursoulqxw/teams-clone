@@ -29,7 +29,6 @@ class Assigments(Model):
     description = TextField()
     due_data = DateField()
     max_points = IntegerField(
-        max_points = 100,
         help_text='Points'
     )
 
