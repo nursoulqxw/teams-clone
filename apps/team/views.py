@@ -15,6 +15,16 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
+# drf-spectacular
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiParameter,
+    OpenApiResponse,
+    OpenApiExample,
+)
+from drf_spectacular.types import OpenApiTypes
+
 from .permissions import IsTeamOwnerOrAdmin, IsTeamMember
 
 # Project modules
@@ -33,6 +43,56 @@ from .permissions import (
 from .filters import build_team_q,build_membership_q
 
 logger = logging.getLogger(__name__)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List all teams',
+        description='Supports filtering.',
+        tags=['Teams'],
+        responses={
+            200: OpenApiResponse(
+                response=TeamSerializer(many=True),
+                description='Teams list returned successfully',
+            )
+        },
+    ),
+    retrieve=extend_schema(
+        summary='Retrieve a team',
+        tags=['Teams'],
+        responses={
+            200: OpenApiResponse(response=TeamSerializer, description='Team found'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+    create=extend_schema(
+        summary='Create a team',
+        tags=['Teams'],
+        request=CreateTeamSerializer,
+        responses={
+            201: OpenApiResponse(response=TeamSerializer, description='Team created successfully'),
+            400: OpenApiResponse(description='Validation error'),
+        },
+    ),
+    partial_update=extend_schema(
+        summary='Update a team (PATCH)',
+        tags=['Teams'],
+        request=UpdateTeamSerializer,
+        responses={
+            200: OpenApiResponse(response=TeamSerializer, description='Team updated successfully'),
+            400: OpenApiResponse(description='Validation error'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+    destroy=extend_schema(
+        summary='Delete a team',
+        tags=['Teams'],
+        responses={
+            204: OpenApiResponse(description='Team deleted successfully'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+)
 
 
 class TeamViewSet(ViewSet):
