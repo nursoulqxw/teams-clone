@@ -13,6 +13,13 @@ from rest_framework.status import(
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+# drf-spectacular
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiResponse,
+)
+
 #Project modules
 from .serializers import (
     AssigmentsSerialzers,
@@ -25,6 +32,47 @@ from .models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List all assignments',
+        tags=['Assignments'],
+        responses={
+            200: OpenApiResponse(
+                response=AssigmentsSerialzers(many=True),
+                description='Assignments list returned successfully',
+            ),
+        },
+    ),
+    retrieve=extend_schema(
+        summary='Retrieve assignments by team ID',
+        tags=['Assignments'],
+        responses={
+            200: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment found'),
+            404: OpenApiResponse(description='Assignment not found'),
+        },
+    ),
+    partial_update=extend_schema(
+        summary='Update an assignment (PATCH)',
+        tags=['Assignments'],
+        request=UpdateAssigmentsSerializers,
+        responses={
+            200: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment updated successfully'),
+            400: OpenApiResponse(description='Validation error'),
+            404: OpenApiResponse(description='Assignment not found'),
+        },
+    ),
+    create=extend_schema(
+        summary='Create an assignment',
+        tags=['Assignments'],
+        request=CreateAssigmentsSerializers,
+        responses={
+            201: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment created successfully'),
+            400: OpenApiResponse(description='Validation error'),
+        },
+    ),
+)
 
 class AssigmentsViewSet(ViewSet):
     """
@@ -58,7 +106,8 @@ class AssigmentsViewSet(ViewSet):
         """
         queryset = Assigments.objects.all().order_by('-id')
         serializer = AssigmentsSerialzers(
-            
+            queryset,
+            many=True
         )
         logger.info(
             'List of assigments : %s',
@@ -81,7 +130,11 @@ class AssigmentsViewSet(ViewSet):
         Assigments by team_id
         """
         try:
-            assigments = self.get_assigment_or_404(team_id)
+            error,assigments = self.get_assigment_or_404(team_id)
+
+            if error:
+                return error
+            
             serializer = AssigmentsSerialzers(
                 assigments
             )
@@ -120,7 +173,7 @@ class AssigmentsViewSet(ViewSet):
 
         serializer = UpdateAssigmentsSerializers(
             assigment,
-            request = request.data,
+            data = request.data,
             context = {
                 'request':request
             }
@@ -128,7 +181,7 @@ class AssigmentsViewSet(ViewSet):
 
         if serializer.is_valid():
             assigment = serializer.save()
-            logger.ingo(
+            logger.info(
                 'Updated assigments -> assigment:%s, team_id:%s',
                 assigment,
                 team_id
@@ -159,7 +212,7 @@ class AssigmentsViewSet(ViewSet):
         Create Assigments
         """
         serializer = CreateAssigmentsSerializers(
-            request = request.data,
+            data = request.data
             context = {
                 'request':request
             }
@@ -178,7 +231,7 @@ class AssigmentsViewSet(ViewSet):
                     'message':"Created assigment",
                     'data':AssigmentsSerialzers(assigment).data
                 },
-                status=HTTP_200_OK
+                status=HTTP_201_CREATED
             )
         logger.error(
             'Serializer is not valid :%s',
