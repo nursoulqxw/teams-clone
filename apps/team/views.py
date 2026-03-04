@@ -280,6 +280,49 @@ class TeamViewSet(ViewSet):
             status=HTTP_204_NO_CONTENT,
         )
 
+
+    @extend_schema(
+        methods=['GET'],
+        summary='List team members',
+        tags=['Team Members'],
+        responses={
+            200: OpenApiResponse(
+                response=TeamMembershipSerializer(many=True),
+                description='Members list returned successfully',
+            ),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary='Add a member to a team',
+        tags=['Team Members'],
+        request=CreateTeamMembershipSerializer,
+        responses={
+            201: OpenApiResponse(response=TeamMembershipSerializer, description='Member added successfully'),
+            400: OpenApiResponse(description='Validation error'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary='Remove a member from a team',
+        tags=['Team Members'],
+        request=OpenApiTypes.OBJECT,
+        examples=[
+            OpenApiExample(
+                'Delete member example',
+                value={'user_id': 1},
+                request_only=True,
+            )
+        ],
+        responses={
+            204: OpenApiResponse(description='Member removed successfully'),
+            400: OpenApiResponse(description='user_id is required'),
+            404: OpenApiResponse(description='Team or member not found'),
+        },
+    )
+
     @action(
         detail=True, 
         methods=['get', 'post','delete'], 
@@ -352,9 +395,9 @@ class TeamViewSet(ViewSet):
         data = {
             **request.data, 
             'team': team.id
-        }  # добавляем team в data
+        } 
         serializer = CreateTeamMembershipSerializer(
-            data=data,  # передаём data с team
+            data=data,  
             context={'request': request}
         )
         if not serializer.is_valid():
