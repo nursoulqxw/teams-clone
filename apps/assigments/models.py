@@ -9,14 +9,15 @@ from django.db.models import (
     FloatField,
     BooleanField,
     DateField
-
+    
 )
+from apps.abstract.models import AbstractModel
 
 from apps.team.models import Team
 from apps.users.models import CustomUser
 
 
-class Assignments(Model):
+class Assignments(AbstractModel):
     team_id = ForeignKey(
         Team,
         on_delete = CASCADE,

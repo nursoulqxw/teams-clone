@@ -103,14 +103,14 @@ class AssigmentsViewSet(ViewSet):
         Assignments | None, 
         Response | None
     ]:
-        """Helper: returns (team, None) or (None, 404 Response)"""
+        """Helper: returns (assignment, None) or (None, 404 Response)"""
         try:
-            team = Assignments.objects.get(pk=pk)
-            return team, None
+            assignment = Assignments.objects.get(pk=pk)
+            return assignment, None
         except Assignments.DoesNotExist:
-            logger.warning('Team not found: id=%s', pk)
+            logger.warning('Assignment not found: id=%s', pk)
             return None, Response(
-                {'error': 'Team not found.'},
+                {'error': 'Assignment not found.'},
                 status=HTTP_404_NOT_FOUND
             )
 
@@ -153,13 +153,13 @@ class AssigmentsViewSet(ViewSet):
         Assigments by team_id
         """
         try:
-            error,assigments = self.get_assigment_or_404(pk)
+            assignment, error = self.get_assigment_or_404(pk)
 
             if error:
                 return error
             
             serializer = AssigmentsSerialzers(
-                assigments
+                assignment
             )
             logger.info(
                 'Assigments by team_id:%s',
@@ -192,10 +192,12 @@ class AssigmentsViewSet(ViewSet):
         """
         Update Assigments 
         """
-        assigment = self.get_assigment_or_404(pk)
+        assignment, error = self.get_assigment_or_404(pk)
+        if error:
+            return error
 
         serializer = UpdateAssigmentsSerializers(
-            assigment,
+            assignment,
             data = request.data,
             context = {
                 'request':request
@@ -302,7 +304,7 @@ class AssigmentsViewSet(ViewSet):
         GET  api/assignments/{id}/submit/ — list all submissions for this assignment
         POST api/assignments/{id}/submit/ — mark the current student's submission as submitted
         """
-        error,assignment= self.get_assigment_or_404(pk)
+        assignment, error = self.get_assigment_or_404(pk)
         if error:
             return error
 
@@ -319,8 +321,8 @@ class AssigmentsViewSet(ViewSet):
     ) -> Response:
         """Return all submissions for a given assignment."""
         submissions = Assignment_Submissions.objects.filter(
-            assignment=assignment
-        ).select_related('student')
+            assigment=assignment
+        ).select_related('student_id')
 
         serializer = AssigmentsSubmissionsSerializers(submissions, many=True)
         logger.info(
@@ -342,28 +344,29 @@ class AssigmentsViewSet(ViewSet):
         request: Request,
         assignment: Assignments,
     ) -> Response:
-        """Mark the requesting student's submission as submitted and update status."""
+        """Mark the requesting student's submission as submitted and update status
+        """
         try:
             submission = Assignment_Submissions.objects.get(
-                assignment=assignment,
-                student=request.user,
+                assigment=assignment,
+                student_id=request.user,
             )
         except Assignment_Submissions.DoesNotExist:
-            logger.warning(
-                'Submission not found: assignment_id=%s user=%s',
+            logger.info(
+                'No existing submission, creating new record: assignment_id=%s user=%s',
                 assignment.id,
                 request.user.id,
             )
-            return Response(
-                {'error': 'Submission record not found for this user.'},
-                status=HTTP_404_NOT_FOUND,
+            submission = Assignment_Submissions.objects.create(
+                assigment=assignment,
+                student_id=request.user,
             )
 
         submission.submitted = True
 
         serializer = CompletedAssigmentsSerializers(
             submission,
-            data={},        
+            data={},
             partial=True,
             context={'request': request},
         )
