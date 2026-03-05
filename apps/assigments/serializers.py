@@ -1,7 +1,8 @@
 #REST modules
 from rest_framework.serializers import (
     ModelSerializer,
-    SerializerMethodField
+    SerializerMethodField,
+    EmailField
 )
 
 #Django modules
@@ -99,7 +100,6 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
             'assigment',
             'student_info',
             'status',
-            'points_awarded',
             'submitted',
             'submitted_at'
         ]
@@ -114,7 +114,6 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
         student = obj.student_id
         return {
             'id':student.id,
-            'full_name':student.get_full_name(),
             'email':student.email
         }   
     
@@ -125,8 +124,12 @@ class CompletedAssigmentsSerializers(ModelSerializer):
     class Meta:
         model = Assignment_Submissions
         fields = [
-            'submitted'
+            'submitted',
+            'submitted_at',
+            'status',
+            'file'
         ]
+        read_only_fields = ['submitted_at', 'status']
 
     def update(self, instance, validated_data):
         """
@@ -137,6 +140,11 @@ class CompletedAssigmentsSerializers(ModelSerializer):
 
         new_submitted = validated_data.get('submitted', instance.submitted)
 
+        file = validated_data.get('file')
+
+        if file:
+            instance.file = file
+
         if new_submitted and not instance.submitted:
         
             instance.submitted = True
@@ -146,13 +154,33 @@ class CompletedAssigmentsSerializers(ModelSerializer):
                 instance.status = 'completed_late'
             else:
                 instance.status = 'completed'
-        else:
 
-            if not instance.submitted and now.date() > due_date:
-                instance.status = 'overdue'
+        elif not instance.submitted and now.date() > due_date:
+            instance.status = 'overdue'
 
         instance.save()
         return instance
 
+
+class SubmissionListSerializer(ModelSerializer):
+
+    student_email = EmailField(source='student.email')
+
+    class Meta:
+        model = Assignment_Submissions
+        fields = [
+            'id',
+            'student_email',
+            'submitted',
+            'submitted_at',
+            'status',
+        ]
+
+
+class GradeSubmissionSerializer(ModelSerializer):
+
+    class Meta:
+        model = Assignment_Submissions
+        fields = ['points_awarded']
 
 
