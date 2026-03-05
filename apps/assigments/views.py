@@ -212,7 +212,7 @@ class AssigmentsViewSet(ViewSet):
         Create Assigments
         """
         serializer = CreateAssigmentsSerializers(
-            data = request.data
+            data = request.data,
             context = {
                 'request':request
             }

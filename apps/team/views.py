@@ -35,7 +35,12 @@ from .serializers import (
     TeamMembershipSerializer,
     CreateTeamMembershipSerializer,
 )
+from apps.assigments.serializers import (
+    AssigmentsSerialzers,
+    CreateAssigmentsSerializers
+)
 from .models import Team, TeamMembership
+from apps.assigments.models import Assigments
 from .permissions import (
     IsTeamOwnerOrAdmin,
     IsTeamMember
@@ -323,6 +328,98 @@ class TeamViewSet(ViewSet):
         },
     )
 
+    @action(
+        detail=True,
+        methods=['get','post'],
+        url_path='assigment'
+    )
+    def assigments(
+        self,
+        request:Request,
+        pk:int = None
+    )->Response:
+        """
+        Assigment by team and team_id
+        """
+        team,error = self.get_team_or_404(pk)
+        if error:
+            return error
+
+        if request.method == 'GET':
+            logger.info('list of assigments by team_id:%s',team)
+            return self._list_assigments(request,team)
+        
+        if request.method == "POST":
+            logger.info('Create assigment by team and team_id: %s',team)
+            return self._create_assigments(request,team)
+        
+    def _list_assigments(
+        self,
+        request:Request,
+        team:int=None
+    )->Response:
+        """
+        List assigments
+        """
+        assigment = Assigments.objects.filter(
+            team = team
+        ).order_by('due_data')
+
+        serializer = AssigmentsSerialzers(
+            assigment,
+            many = True
+        )
+
+        logger.info(
+            'List assigments by team and team_id: %s,assigment:%s',
+            team,
+            assigment
+        )
+
+        return Response(
+            {
+                'meassage':"Assigments by team_id",
+                'data':serializer.data
+            },
+            status = HTTP_200_OK
+        )
+    
+    def _create_assignment(
+        self,
+        request: Request,
+        team: Team
+    ) -> Response:
+        """Create an assignment for a team."""
+        serializer = CreateAssigmentsSerializers(
+            data=request.data,
+            context={'request': request, 'team': team}
+        )
+        if not serializer.is_valid():
+            logger.warning(
+                'Assignment creation failed: team_id=%s errors=%s',
+                team.id,
+                serializer.errors
+            )
+            return Response(
+                {'error': serializer.errors},
+                status=HTTP_400_BAD_REQUEST,
+            )
+
+        assignment = serializer.save(team=team)
+        logger.info(
+            'Assignment created: id=%s team_id=%s by user=%s',
+            assignment.id,
+            team.id,
+            request.user.id
+        )
+        return Response(
+            {
+                'message': 'Assignment created successfully',
+                'data': AssigmentsSerialzers(assignment).data,
+            },
+            status=HTTP_201_CREATED,
+        )
+    
     @action(
         detail=True, 
         methods=['get', 'post','delete'], 
