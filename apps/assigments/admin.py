@@ -1,12 +1,12 @@
 from django.contrib.admin import register,ModelAdmin
 
 from .models import (
-    Assigments,
+    Assignments,
     Assignment_Submissions
 )
 
 
-@register(Assigments)
+@register(Assignments)
 class AssigmnetsAdmin(ModelAdmin):
     list_display = (
         'team_id',

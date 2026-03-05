@@ -15,6 +15,16 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
+# drf-spectacular
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+    OpenApiParameter,
+    OpenApiResponse,
+    OpenApiExample,
+)
+from drf_spectacular.types import OpenApiTypes
+
 from .permissions import IsTeamOwnerOrAdmin, IsTeamMember
 
 # Project modules
@@ -25,7 +35,12 @@ from .serializers import (
     TeamMembershipSerializer,
     CreateTeamMembershipSerializer,
 )
+from apps.assigments.serializers import (
+    AssigmentsSerialzers,
+    CreateAssigmentsSerializers
+)
 from .models import Team, TeamMembership
+from apps.assigments.models import Assignments
 from .permissions import (
     IsTeamOwnerOrAdmin,
     IsTeamMember
@@ -33,6 +48,56 @@ from .permissions import (
 from .filters import build_team_q,build_membership_q
 
 logger = logging.getLogger(__name__)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List all teams',
+        description='Supports filtering.',
+        tags=['Teams'],
+        responses={
+            200: OpenApiResponse(
+                response=TeamSerializer(many=True),
+                description='Teams list returned successfully',
+            )
+        },
+    ),
+    retrieve=extend_schema(
+        summary='Retrieve a team',
+        tags=['Teams'],
+        responses={
+            200: OpenApiResponse(response=TeamSerializer, description='Team found'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+    create=extend_schema(
+        summary='Create a team',
+        tags=['Teams'],
+        request=CreateTeamSerializer,
+        responses={
+            201: OpenApiResponse(response=TeamSerializer, description='Team created successfully'),
+            400: OpenApiResponse(description='Validation error'),
+        },
+    ),
+    partial_update=extend_schema(
+        summary='Update a team (PATCH)',
+        tags=['Teams'],
+        request=UpdateTeamSerializer,
+        responses={
+            200: OpenApiResponse(response=TeamSerializer, description='Team updated successfully'),
+            400: OpenApiResponse(description='Validation error'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+    destroy=extend_schema(
+        summary='Delete a team',
+        tags=['Teams'],
+        responses={
+            204: OpenApiResponse(description='Team deleted successfully'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    ),
+)
 
 
 class TeamViewSet(ViewSet):
@@ -220,6 +285,141 @@ class TeamViewSet(ViewSet):
             status=HTTP_204_NO_CONTENT,
         )
 
+
+    @extend_schema(
+        methods=['GET'],
+        summary='List team members',
+        tags=['Team Members'],
+        responses={
+            200: OpenApiResponse(
+                response=TeamMembershipSerializer(many=True),
+                description='Members list returned successfully',
+            ),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary='Add a member to a team',
+        tags=['Team Members'],
+        request=CreateTeamMembershipSerializer,
+        responses={
+            201: OpenApiResponse(response=TeamMembershipSerializer, description='Member added successfully'),
+            400: OpenApiResponse(description='Validation error'),
+            404: OpenApiResponse(description='Team not found'),
+        },
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary='Remove a member from a team',
+        tags=['Team Members'],
+        request=OpenApiTypes.OBJECT,
+        examples=[
+            OpenApiExample(
+                'Delete member example',
+                value={'user_id': 1},
+                request_only=True,
+            )
+        ],
+        responses={
+            204: OpenApiResponse(description='Member removed successfully'),
+            400: OpenApiResponse(description='user_id is required'),
+            404: OpenApiResponse(description='Team or member not found'),
+        },
+    )
+
+    @action(
+        detail=True,
+        methods=['get','post'],
+        url_path='assigment'
+    )
+    def assigments(
+        self,
+        request:Request,
+        pk:int = None
+    )->Response:
+        """
+        Assigment by team and team_id
+        """
+        team,error = self.get_team_or_404(pk)
+        if error:
+            return error
+
+        if request.method == 'GET':
+            logger.info('list of assigments by team_id:%s',team)
+            return self._list_assigments(request,team)
+        
+        if request.method == "POST":
+            logger.info('Create assigment by team and team_id: %s',team)
+            return self._create_assigments(request,team)
+        
+    def _list_assigments(
+        self,
+        request:Request,
+        team:int=None
+    )->Response:
+        """
+        List assigments
+        """
+        assigment = Assignments.objects.filter(
+            team = team
+        ).order_by('due_data')
+
+        serializer = AssigmentsSerialzers(
+            assigment,
+            many = True
+        )
+
+        logger.info(
+            'List assigments by team and team_id: %s,assigment:%s',
+            team,
+            assigment
+        )
+
+        return Response(
+            {
+                'meassage':"Assigments by team_id",
+                'data':serializer.data
+            },
+            status = HTTP_200_OK
+        )
+    
+    def _create_assignment(
+        self,
+        request: Request,
+        team: Team
+    ) -> Response:
+        """Create an assignment for a team."""
+        serializer = CreateAssigmentsSerializers(
+            data=request.data,
+            context={'request': request, 'team': team}
+        )
+        if not serializer.is_valid():
+            logger.warning(
+                'Assignment creation failed: team_id=%s errors=%s',
+                team.id,
+                serializer.errors
+            )
+            return Response(
+                {'error': serializer.errors},
+                status=HTTP_400_BAD_REQUEST,
+            )
+
+        assignment = serializer.save(team=team)
+        logger.info(
+            'Assignment created: id=%s team_id=%s by user=%s',
+            assignment.id,
+            team.id,
+            request.user.id
+        )
+        return Response(
+            {
+                'message': 'Assignment created successfully',
+                'data': AssigmentsSerialzers(assignment).data,
+            },
+            status=HTTP_201_CREATED,
+        )
+    
     @action(
         detail=True, 
         methods=['get', 'post','delete'], 
@@ -292,9 +492,9 @@ class TeamViewSet(ViewSet):
         data = {
             **request.data, 
             'team': team.id
-        }  # добавляем team в data
+        } 
         serializer = CreateTeamMembershipSerializer(
-            data=data,  # передаём data с team
+            data=data,  
             context={'request': request}
         )
         if not serializer.is_valid():

@@ -9,7 +9,7 @@ from django.utils import timezone
 
 #Project modules
 from .models import (
-    Assigments,
+    Assignments,
     Assignment_Submissions
 )
 
@@ -22,7 +22,7 @@ class AssigmentsSerialzers(ModelSerializer):
     team_info = SerializerMethodField()
 
     class Meta:
-        model = Assigments
+        model = Assignments
         fields = [
             'team_info',
             'title',
@@ -33,7 +33,7 @@ class AssigmentsSerialzers(ModelSerializer):
     
     def get_team_info(
         self,
-        obj:Assigments
+        obj:Assignments
     )->dict:
         """
         Team Info (name,id)
@@ -50,9 +50,9 @@ class ShortAssigmentsSerializers(ModelSerializer):
     Short Assigments Serializers
     """
     class Meta:
-        model = Assigments
+        model = Assignments
         fields = [
-            'team_id',
+            'id',
             'title'
         ]
 
@@ -62,9 +62,9 @@ class CreateAssigmentsSerializers(ModelSerializer):
     """
     
     class Meta:
-        model = Assigments,
+        model = Assignments
         fields = [
-            'team_id',
+            'team',
             'title',
             'description',
             'due_data',
@@ -78,7 +78,7 @@ class UpdateAssigmentsSerializers(ModelSerializer):
     """
     
     class Meta:
-        model = Assigments
+        model = Assignments
         fields = [
             'max_points',
             'due_data'
@@ -95,7 +95,7 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
     class Meta:
         model = Assignment_Submissions
         fields = [
-            'assigment_id',
+            'assignment',
             'student_info',
             'status',
             'points_awarded'
@@ -103,7 +103,7 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
 
     def get_student_info(
         self,
-        obj:Assigments
+        obj:Assignment_Submissions
     )->dict:
         """
         Student Info
@@ -122,7 +122,7 @@ class CompletedAssigmentsSerializers(ModelSerializer):
     """
     
     class Meta:
-        model:Assignment_Submissions
+        model = Assignment_Submissions
         fields = [
             'status',
             'submitted_at'
