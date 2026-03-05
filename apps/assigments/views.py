@@ -28,7 +28,9 @@ from .serializers import (
     CreateAssigmentsSerializers,
     UpdateAssigmentsSerializers,
     AssigmentsSubmissionsSerializers,
-    CompletedAssigmentsSerializers
+    CompletedAssigmentsSerializers,
+    SubmissionListSerializer,
+    GradeSubmissionSerializer
 )
 from .models import (
     Assignments,
@@ -90,11 +92,10 @@ class AssigmentsViewSet(ViewSet):
         if self.action in ['create', 'partial_update']:
             return [IsAuthenticated(), IsTeamOwner()]
         elif self.action == 'submit_assignment':
-            if self.request and self.request.method == 'GET':
-                return [IsAuthenticated(), IsTeamOwner()]
-            elif self.request and self.request.method == 'POST':
+            if self.request and self.request.method == 'POST':
                 return [IsAuthenticated(), IsTeamMember()]
-        return super().get_permissions()
+        elif self.action == 'submissions' or self.action == 'grade':
+            return [IsAuthenticated(), IsTeamOwner()]
 
     def get_assigment_or_404(
         self, 
@@ -308,36 +309,9 @@ class AssigmentsViewSet(ViewSet):
         if error:
             return error
 
-        if request.method == 'GET':
-            return self._list_submissions(request, assignment)
-
         if request.method == 'POST':
             return self._submit(request, assignment)
-
-    def _list_submissions(
-        self,
-        request: Request,
-        assignment: Assignments,
-    ) -> Response:
-        """Return all submissions for a given assignment."""
-        submissions = Assignment_Submissions.objects.filter(
-            assigment=assignment
-        ).select_related('student_id')
-
-        serializer = AssigmentsSubmissionsSerializers(submissions, many=True)
-        logger.info(
-            'Submissions listed: assignment_id=%s by user=%s',
-            assignment.id,
-            request.user.id,
-        )
-        return Response(
-            {
-                'message': 'Submissions list',
-                'count': submissions.count(),
-                'data': serializer.data,
-            },
-            status=HTTP_200_OK,
-        )
+        
 
     def _submit(
         self,
@@ -366,7 +340,7 @@ class AssigmentsViewSet(ViewSet):
 
         serializer = CompletedAssigmentsSerializers(
             submission,
-            data={},
+            data=request.data,
             partial=True,
             context={'request': request},
         )
@@ -388,6 +362,64 @@ class AssigmentsViewSet(ViewSet):
             status=HTTP_200_OK,
         )
     
-        
+    @action(
+        detail=True, 
+        methods=['get'], 
+        url_path='submissions'
+    )
+    def submissions(self, request, pk=None):
 
+        assignment = self.get_object()
+        submissions = assignment.submissions.all()
+
+        serializer = SubmissionListSerializer(submissions, many=True)
+        logger.info('Team owner see submissions: assignment:%s',assignment.id)
+
+        return Response(serializer.data)
+            
+    from rest_framework.decorators import action
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="grade/(?P<submission_id>[^/.]+)"
+    )
+    def grade(self, request, pk=None, submission_id=None):
+        
+        assignment, error = self.get_assigment_or_404(pk)
+
+        if error:
+            return error
+
+        try:
+            submission = Assignment_Submissions.objects.get(
+                id=submission_id,
+                assigment=assignment
+            )
+        except Assignment_Submissions.DoesNotExist:
+            logger,error(
+                'Grade of assignment:%s',
+                assignment.id
+            )
+            return Response(
+                {"error": "Submission not found"},
+                status=404
+            )
+
+        serializer = GradeSubmissionSerializer(
+            submission,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        
+        serializer.save()
+
+        return Response(
+            {
+                "message": "Student graded successfully",
+                "data": serializer.data
+            }
+        )
 
