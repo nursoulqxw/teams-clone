@@ -89,8 +89,7 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
     """
     Assigmnets Submissions
     """
-    # show related assignment details using the `ShortAssigmentsSerializers`
-    # the FK field on the model is `assigment`; use source to pull the object
+    
     assigment = ShortAssigmentsSerializers(read_only=True)
     student_info = SerializerMethodField()
 
@@ -112,7 +111,6 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
         """
         Student Info
         """
-        # the foreign key field is student_id; it returns the user instance
         student = obj.student_id
         return {
             'id':student.id,

@@ -344,10 +344,7 @@ class AssigmentsViewSet(ViewSet):
         request: Request,
         assignment: Assignments,
     ) -> Response:
-        """Mark the requesting student's submission as submitted and update status.
-
-        If no submission record exists for the user, create one first so that the
-        request can transition it to a submitted state instead of returning 404.
+        """Mark the requesting student's submission as submitted and update status
         """
         try:
             submission = Assignment_Submissions.objects.get(
@@ -365,7 +362,6 @@ class AssigmentsViewSet(ViewSet):
                 student_id=request.user,
             )
 
-        # mark the found or newly created submission as submitted
         submission.submitted = True
 
         serializer = CompletedAssigmentsSerializers(
