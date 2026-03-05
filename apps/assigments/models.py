@@ -16,7 +16,7 @@ from apps.team.models import Team
 from apps.users.models import CustomUser
 
 
-class Assigments(Model):
+class Assignments(Model):
     team_id = ForeignKey(
         Team,
         on_delete = CASCADE,
@@ -49,7 +49,7 @@ class Assignment_Submissions(Model):
     ]   
 
     assigment = ForeignKey(
-        Assigments,
+        Assignments,
         on_delete=CASCADE,
         related_name='submissions'
     )

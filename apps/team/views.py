@@ -40,7 +40,7 @@ from apps.assigments.serializers import (
     CreateAssigmentsSerializers
 )
 from .models import Team, TeamMembership
-from apps.assigments.models import Assigments
+from apps.assigments.models import Assignments
 from .permissions import (
     IsTeamOwnerOrAdmin,
     IsTeamMember
