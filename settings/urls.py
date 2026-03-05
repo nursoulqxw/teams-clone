@@ -7,6 +7,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/",include("apps.team.urls")),
     path("api/users/", include("apps.users.urls")),
+    path('api/channels/', include('apps.channels.urls')),
     path("api/assignment/",include("apps.assigments.urls")),
     
     # API schema & docs
