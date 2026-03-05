@@ -1,7 +1,8 @@
 #REST modules
 from rest_framework.serializers import (
     ModelSerializer,
-    SerializerMethodField
+    SerializerMethodField,
+    EmailField
 )
 
 #Django modules
@@ -38,7 +39,7 @@ class AssigmentsSerialzers(ModelSerializer):
         """
         Team Info (name,id)
         """
-        team = obj.team
+        team = obj.team_id
         return {
             'id':team.id,
             'name':team.name
@@ -64,7 +65,7 @@ class CreateAssigmentsSerializers(ModelSerializer):
     class Meta:
         model = Assignments
         fields = [
-            'team',
+            'team_id',
             'title',
             'description',
             'due_data',
@@ -89,16 +90,18 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
     """
     Assigmnets Submissions
     """
-    assigment_id = ShortAssigmentsSerializers()
+    
+    assigment = ShortAssigmentsSerializers(read_only=True)
     student_info = SerializerMethodField()
 
     class Meta:
         model = Assignment_Submissions
         fields = [
-            'assignment',
+            'assigment',
             'student_info',
             'status',
-            'points_awarded'
+            'submitted',
+            'submitted_at'
         ]
 
     def get_student_info(
@@ -108,53 +111,76 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
         """
         Student Info
         """
-        student = obj.student
+        student = obj.student_id
         return {
             'id':student.id,
-            'full_name':student.get_full_name(),
             'email':student.email
         }   
     
 
 class CompletedAssigmentsSerializers(ModelSerializer):
-    """
-    Assigments status : (Overdue,Upcoming,Completed)
-    """
-    
+
+
     class Meta:
         model = Assignment_Submissions
         fields = [
+            'submitted',
+            'submitted_at',
             'status',
-            'submitted_at'
+            'file'
         ]
+        read_only_fields = ['submitted_at', 'status']
 
-    def update(
-        self, 
-        instance, 
-        validated_data
-    ):
+    def update(self, instance, validated_data):
         """
-        Updata for status
+        Update submission status and submitted_at
         """
         now = timezone.now()
-        due_data = instance.assigment.due_data
+        due_date = instance.assigment.due_data
 
+        new_submitted = validated_data.get('submitted', instance.submitted)
+
+        file = validated_data.get('file')
+
+        if file:
+            instance.file = file
+
+        if new_submitted and not instance.submitted:
         
-        if instance.submitted:
+            instance.submitted = True
             instance.submitted_at = now
 
-            if now.date() > due_data:
+            if now.date() > due_date:
                 instance.status = 'completed_late'
             else:
                 instance.status = 'completed'
-        
-        else:
-            if now.date() > due_data:
-                instance.status = 'overdue'
-                
+
+        elif not instance.submitted and now.date() > due_date:
+            instance.status = 'overdue'
+
         instance.save()
         return instance
-    
 
+
+class SubmissionListSerializer(ModelSerializer):
+
+    student_email = EmailField(source='student.email')
+
+    class Meta:
+        model = Assignment_Submissions
+        fields = [
+            'id',
+            'student_email',
+            'submitted',
+            'submitted_at',
+            'status',
+        ]
+
+
+class GradeSubmissionSerializer(ModelSerializer):
+
+    class Meta:
+        model = Assignment_Submissions
+        fields = ['points_awarded']
 
 

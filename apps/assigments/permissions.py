@@ -10,7 +10,7 @@ class IsTeamOwner(BasePermission):
 
     def has_permission(self, request, view):
         if view.action == 'create':
-            team_id = request.data.get('team_id')
+            team_id = request.data.get('team_id') 
             if team_id:
                 try:
                     team = Team.objects.get(id=team_id)
