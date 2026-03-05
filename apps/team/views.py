@@ -361,7 +361,7 @@ class TeamViewSet(ViewSet):
         """
         List assigments
         """
-        assigment = Assigments.objects.filter(
+        assigment = Assignments.objects.filter(
             team = team
         ).order_by('due_data')
 
