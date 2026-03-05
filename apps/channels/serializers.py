@@ -36,7 +36,7 @@ class ChannelSerializer(ModelSerializer):
             'name',
             'description',
             'team',
-            'team_name'
+            'team_name',
             'is_private',
             'members',
             'members_count',

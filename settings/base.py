@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.team",
     'apps.channels',
+    "apps.messages",
     "apps.assigments"
 
 
