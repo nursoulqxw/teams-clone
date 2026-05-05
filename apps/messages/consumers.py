@@ -8,10 +8,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.channel_id = self.scope["url_route"]["kwargs"]["channel_id"]
         self.room_group_name = f"chat_{self.channel_id}"
 
-        # # user = self.scope["user"]
-        # if not user.is_authenticated:
-        #     await self.close()
-        #     return
+        # need to comment this out for now since we don't have auth set up yet, but in a real app you'd want to check if the user is authenticated before allowing them to connect
+        user = self.scope["user"] 
+        if not user.is_authenticated:
+            await self.close()
+            return
+        #-------
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -41,7 +43,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 "type": "chat_message",
                 "message": message,
-                "sender": getattr(self.scope["user"], "email", "anonymous"),
+                "sender": self.scope["user"].email,
             },
         )
 
