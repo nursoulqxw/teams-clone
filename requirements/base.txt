@@ -7,3 +7,6 @@ psycopg2-binary>=2.9
 Pillow>=10.0
 django-filter>=23.0
 django-ratelimit>=4.1.0
+channels
+channels-redis
+daphne
