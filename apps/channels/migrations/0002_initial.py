@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('channels', '0001_initial'),
+        ('app_channels', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('team', '0001_initial'),
     ]
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='members',
-            field=models.ManyToManyField(blank=True, help_text='Members with access (for private channels only)', related_name='private_channels', through='channels.ChannelMembership', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(blank=True, help_text='Members with access (for private channels only)', related_name='private_channels', through='app_channels.ChannelMembership', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='channel',

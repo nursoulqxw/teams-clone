@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = SECRET_KEY  # noqa: F811 (from conf)
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_spectacular",
     "django_filters",
+    "channels",
     # Local apps  ← team members will add their apps here
     "apps.abstract",
     "apps.users",
@@ -25,10 +27,20 @@ INSTALLED_APPS = [
     'apps.channels',
     "apps.messages",
     "apps.assigments"
-
-
 ]
+
 AUTH_USER_MODEL = "users.CustomUser"
+
+WSGI_APPLICATION = "settings.wsgi.application"
+ASGI_APPLICATION = "settings.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -128,9 +140,6 @@ TEMPLATES = [
         },
     }
 ]
-
-WSGI_APPLICATION = "settings.wsgi.application"
-ASGI_APPLICATION = "settings.asgi.application"
 
 # ── Database (overridden per environment) ──────────────────────────────────────
 DATABASES = {
