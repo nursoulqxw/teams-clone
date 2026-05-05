@@ -21,6 +21,7 @@ from .serializers import (
     CreateMessageSerializer,
     UpdateMessageSerializer,
 )
+from .filters import build_message_q
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,6 @@ class MessageViewSet(ViewSet):
         Optional filter: ?channel=<id>
         """
         user = request.user
-        channel_id = request.query_params.get("channel")
 
         queryset = Message.objects.select_related(
             "author",
@@ -89,16 +89,18 @@ class MessageViewSet(ViewSet):
             channel__team__members__id=user.id
         ).order_by("created_at")
 
-        if channel_id:
-            queryset = queryset.filter(channel_id = channel_id)
+        queryset = build_message_q(request, queryset)
 
-        serializer = MessageSerializer(queryset, many = True)
-        logger.debug("Message list requested by user=%s channel=%s", user.id, channel_id)
+        serializer = MessageSerializer(queryset, many=True)
+        logger.debug(
+            "Message list requested by user=%s params=%s",
+            user.id, request.query_params.dict(),
+        )
 
         return Response(
             {
                 "message": "List of messages",
-                "count": queryset.count(),
+                "count": len(serializer.data),
                 "data": serializer.data,
             },
             status=HTTP_200_OK,
