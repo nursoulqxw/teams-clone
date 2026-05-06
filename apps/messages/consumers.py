@@ -10,11 +10,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"chat_{self.channel_id}"
 
         # need to comment this out for now since we don't have auth set up yet, but in a real app you'd want to check if the user is authenticated before allowing them to connect
-        # user = self.scope["user"] 
-        # if not user.is_authenticated:
-        #     await self.close()
-        #     return
-        #-------
+        user = self.scope["user"]  #<--
+        if not user.is_authenticated: #<--
+            await self.close() #<--
+            return #<--
+        #------- 3акомментируйте все что я тут указал, чтобы протестить через терминал (удобнее), но лучше все таки через авторизацию тестить (правильнее)
 
         await self.channel_layer.group_add(
             self.room_group_name,
