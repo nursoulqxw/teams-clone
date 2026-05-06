@@ -38,12 +38,6 @@ from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 
-
-
-  
-    
-    
-
 class AuthViewSet(ViewSet):
     """
     Users can register, login, refresh tokens, logout, and manage their profile.
@@ -55,7 +49,6 @@ class AuthViewSet(ViewSet):
     -Get /users/ - List all users (admin only)
 
     """
-
 
     def get_permissions(self):
         if self.action in {"register", "login", "refresh"}:
@@ -94,12 +87,8 @@ class AuthViewSet(ViewSet):
         ],
     )
 
-
-    
-
     @action(detail=False, methods=["post"], url_path="login")
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
-
     def login(
         self,
         request: Request,
@@ -224,7 +213,6 @@ class AuthViewSet(ViewSet):
 
         
     @action(detail=False, methods=["post"], url_path="token/refresh")
-    
     def refresh(
         self,
         request: Request,
