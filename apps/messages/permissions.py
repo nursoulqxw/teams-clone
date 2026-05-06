@@ -15,6 +15,18 @@ class IsAuthorOrReadOnly(BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request: Request, view: APIView, obj: Message) -> bool:
-        if request.method in SAFE_METHODS:
+        if request.method in SAFE_METHODS: #SAFE_METHODS = tuple containing 'GET', 'OPTIONS', 'HEAD'
             return True
-        return obj.author_id == request.user.id
+        return (
+            obj.author_id == request.user.id
+            or request.user.is_staff
+            or request.user.is_superuser
+        )
+
+    
+
+
+
+
+
+

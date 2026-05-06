@@ -24,6 +24,7 @@ from .serializers import (
 )
 from .filters import build_message_q
 from .tasks import send_message_notification
+from .permissions import IsAuthorOrReadOnly
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class MessageViewSet(ViewSet):
         DELETE api/messages/{id}/      - delete message
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
     def get_message_or_404(
         self,
@@ -173,6 +174,8 @@ class MessageViewSet(ViewSet):
         if error:
             return error
 
+        self.check_object_permissions(request, message)
+
         # доступ к каналу (на всякий)
         if not self._user_has_channel_access(user, message.channel):
             logger.warning(
@@ -218,6 +221,8 @@ class MessageViewSet(ViewSet):
         message, error = self.get_message_or_404(pk)
         if error:
             return error
+
+        self.check_object_permissions(request, message)
 
         # доступ к каналу
         if not self._user_has_channel_access(user, message.channel):

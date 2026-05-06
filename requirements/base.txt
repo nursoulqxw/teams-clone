@@ -12,3 +12,4 @@ channels-redis
 daphne
 celery
 django-celery-beat
+aiohttp
