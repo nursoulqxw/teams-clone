@@ -24,13 +24,7 @@ urlpatterns = [
     # path("api/channels/", include("apps.channels.urls")),
     # path("api/messages/", include("apps.messages.urls")),
 ]
-# Добавь это в конец файла:
 if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
-    
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT

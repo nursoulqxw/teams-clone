@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('channels', '0002_initial'),
+        ('app_channels', '0002_initial'),
         ('messages_app', '0001_initial'),
     ]
 
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='message',
             name='channel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_messages', to='channels.channel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_messages', to='app_channels.channel'),
         ),
         migrations.AlterField(
             model_name='message',

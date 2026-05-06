@@ -1,12 +1,14 @@
 from pathlib import Path
 from datetime import timedelta
 from settings.conf import *
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = SECRET_KEY  # noqa: F811 (from conf)
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -18,17 +20,29 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_spectacular",
     "django_filters",
+    "channels",
+    "django_celery_beat",
     # Local apps  ← team members will add their apps here
     "apps.abstract",
     "apps.users",
     "apps.team",
-    'apps.channels',
+    "apps.channels",
     "apps.messages",
     "apps.assigments"
-
-
 ]
+
 AUTH_USER_MODEL = "users.CustomUser"
+
+WSGI_APPLICATION = "settings.wsgi.application"
+ASGI_APPLICATION = "settings.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -129,9 +143,6 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "settings.wsgi.application"
-ASGI_APPLICATION = "settings.asgi.application"
-
 # ── Database (overridden per environment) ──────────────────────────────────────
 DATABASES = {
     "default": {
@@ -199,3 +210,17 @@ SPECTACULAR_SETTINGS = {
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
+
+#CELERY SETTINGS
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+CELERY_BEAT_SCHEDULE = {
+    "delete-old-messages-daily": {
+        "task": "apps.messages.tasks.delete_old_messages",
+        "schedule": crontab(hour=0, minute=0),
+    },
+}
