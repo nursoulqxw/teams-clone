@@ -15,6 +15,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 
+#Project modules
 from .models import Message
 from .serializers import (
     MessageSerializer,
@@ -22,6 +23,7 @@ from .serializers import (
     UpdateMessageSerializer,
 )
 from .filters import build_message_q
+from .tasks import send_message_notification
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +156,7 @@ class MessageViewSet(ViewSet):
             )
 
         message = serializer.save()
+        send_message_notification.delay(message.id, request.user.email)
 
         return Response(
             {

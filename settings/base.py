@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 from settings.conf import *
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,11 +21,12 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "django_filters",
     "channels",
+    "django_celery_beat",
     # Local apps  ← team members will add their apps here
     "apps.abstract",
     "apps.users",
     "apps.team",
-    'apps.channels',
+    "apps.channels",
     "apps.messages",
     "apps.assigments"
 ]
@@ -208,3 +210,17 @@ SPECTACULAR_SETTINGS = {
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
+
+#CELERY SETTINGS
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+CELERY_BEAT_SCHEDULE = {
+    "delete-old-messages-daily": {
+        "task": "apps.messages.tasks.delete_old_messages",
+        "schedule": crontab(hour=0, minute=0),
+    },
+}
