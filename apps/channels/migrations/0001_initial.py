@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_memberships', to='channels.channel')),
+                ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_memberships', to='app_channels.channel')),
             ],
             options={
                 'verbose_name': 'Channel Membership',

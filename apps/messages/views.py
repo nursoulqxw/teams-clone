@@ -15,12 +15,16 @@ from rest_framework.status import (
 from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 
+#Project modules
 from .models import Message
 from .serializers import (
     MessageSerializer,
     CreateMessageSerializer,
     UpdateMessageSerializer,
 )
+from .filters import build_message_q
+from .tasks import send_message_notification
+from .permissions import IsAuthorOrReadOnly
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +38,7 @@ class MessageViewSet(ViewSet):
         DELETE api/messages/{id}/      - delete message
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
     def get_message_or_404(
         self,
@@ -77,7 +81,6 @@ class MessageViewSet(ViewSet):
         Optional filter: ?channel=<id>
         """
         user = request.user
-        channel_id = request.query_params.get("channel")
 
         queryset = Message.objects.select_related(
             "author",
@@ -89,16 +92,18 @@ class MessageViewSet(ViewSet):
             channel__team__members__id=user.id
         ).order_by("created_at")
 
-        if channel_id:
-            queryset = queryset.filter(channel_id = channel_id)
+        queryset = build_message_q(request, queryset)
 
-        serializer = MessageSerializer(queryset, many = True)
-        logger.debug("Message list requested by user=%s channel=%s", user.id, channel_id)
+        serializer = MessageSerializer(queryset, many=True)
+        logger.debug(
+            "Message list requested by user=%s params=%s",
+            user.id, request.query_params.dict(),
+        )
 
         return Response(
             {
                 "message": "List of messages",
-                "count": queryset.count(),
+                "count": len(serializer.data),
                 "data": serializer.data,
             },
             status=HTTP_200_OK,
@@ -152,6 +157,7 @@ class MessageViewSet(ViewSet):
             )
 
         message = serializer.save()
+        send_message_notification.delay(message.id, request.user.email)
 
         return Response(
             {
@@ -167,6 +173,8 @@ class MessageViewSet(ViewSet):
         message, error = self.get_message_or_404(pk)
         if error:
             return error
+
+        self.check_object_permissions(request, message)
 
         # доступ к каналу (на всякий)
         if not self._user_has_channel_access(user, message.channel):
@@ -213,6 +221,8 @@ class MessageViewSet(ViewSet):
         message, error = self.get_message_or_404(pk)
         if error:
             return error
+
+        self.check_object_permissions(request, message)
 
         # доступ к каналу
         if not self._user_has_channel_access(user, message.channel):
