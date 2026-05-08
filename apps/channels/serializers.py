@@ -3,6 +3,7 @@ import logging
 
 # Rest modules
 from rest_framework.serializers import (
+    IntegerField,
     ModelSerializer,
     SerializerMethodField,
     ValidationError, 
@@ -26,8 +27,11 @@ class ChannelSerializer(ModelSerializer):
     """
 
     team_name = SerializerMethodField()
-    members_count = SerializerMethodField()
-    members = UserListSerializer(many=True, read_only=True)
+    team_info = SerializerMethodField() # Вложенная информация о команде
+    
+    # Считываем аннотированные значения из ViewSet (устранение лишних SQL-запросов)
+    members_count = IntegerField(read_only=True)
+    messages_count = IntegerField(read_only=True)
 
     class Meta:
         model = Channel
@@ -37,9 +41,11 @@ class ChannelSerializer(ModelSerializer):
             'description',
             'team',
             'team_name',
+            'team_info',
             'is_private',
             'members',
             'members_count',
+            'messages_count',
             'create_at',
             'update_at',
         ]
@@ -47,7 +53,14 @@ class ChannelSerializer(ModelSerializer):
     def get_team_name(self, obj: Channel) -> str:
         """Get team name"""
         return obj.team.name
-    
+
+    def get_team_info(self, obj: Channel) -> dict:
+        return {
+            'id': obj.team.id,
+            'name': obj.team.name,
+            'description': obj.team.description
+        }
+
     def get_members_count(self, obj: Channel) -> int:
         """Get count of private channel members"""
         if obj.is_private:
@@ -200,21 +213,27 @@ class UpdateChannelSerializer(ModelSerializer):
         return instance
     
 
+from rest_framework.serializers import ModelSerializer, ReadOnlyField
+
 class ChannelMembershipSerializer(ModelSerializer):
     """
-    Read-only serializer for ChannelMember.
+    Read-only serializer for ChannelMembership.
     Used in: list
     """
-
-    channel = ChannelSerializer(read_only=True)
+    # We leave only one field for user information
     user = UserListSerializer(read_only=True)
+    
+    # Instead of the heavy ChannelSerializer, we only provide basic information about the channel
+    channel_id = ReadOnlyField(source='channel.id')
+    channel_name = ReadOnlyField(source='channel.name')
 
     class Meta:
         model = ChannelMembership
         fields = [
             'id',
-            'channel',
-            'user',
+            'channel_id',    # ID канала
+            'channel_name',  # Имя канала (чтобы на фронте удобно было отображать)
+            'user',          # Полная инфа о юзере (без дублирующего user_info)
             'joined_at',
         ]
 
