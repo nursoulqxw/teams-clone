@@ -4,6 +4,7 @@ from django.urls import reverse
 from apps.users.models import CustomUser
 from apps.team.models import Team, TeamMembership
 from apps.channels.models import Channel, ChannelMembership
+from django.core.cache import cache
 
 class ChannelTests(APITestCase):
     def setUp(self):
@@ -194,3 +195,41 @@ class ChannelTests(APITestCase):
         self.client.force_authenticate(user=self.team_owner)
         response = self.client.get(self.get_members_url(self.public_channel.id))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_channel_list_caching(self):
+        """Проверка работы кэширования для списка каналов"""
+        self.client.force_authenticate(user=self.team_owner)
+        
+        # 1. Очищаем кэш перед тестом на всякий случай
+        cache.clear()
+
+        # 2. Первый запрос: данные берутся из БД. Замеряем количество SQL запросов.
+        with self.assertNumQueries(6): # Число 6 может отличаться в зависимости от вашего кода, подгоните его, посмотрев, сколько запросов идет реально
+            response1 = self.client.get(self.list_url, {'team_id': self.team.id})
+        
+        self.assertEqual(response1.status_code, 200)
+
+        # 3. Второй запрос: данные должны взяться из кэша. Количество SQL запросов к таблицам каналов должно быть 0 (или только запросы на авторизацию пользователя/сессию).
+        with self.assertNumQueries(0): # В идеале 0, если пользователь тоже закэширован, или 1-2 на проверку сессии/юзера.
+            response2 = self.client.get(self.list_url, {'team_id': self.team.id})
+        
+        self.assertEqual(response1.data, response2.data) # Данные должны совпадать
+
+    def test_channel_cache_invalidation(self):
+        """Проверка очистки кэша при обновлении"""
+        self.client.force_authenticate(user=self.team_owner)
+        cache.clear()
+
+        # Генерируем кэш
+        self.client.get(self.list_url, {'team_id': self.team.id})
+        
+        # Убеждаемся, что ключ есть в кэше (используйте тот паттерн ключа, который вы реализовали)
+        cache_key = f"channels_team_{self.team.id}_user_{self.team_owner.id}"
+        self.assertIsNotNone(cache.get(cache_key))
+
+        # Обновляем канал
+        data = {'name': 'new-name'}
+        self.client.patch(self.get_detail_url(self.public_channel.id), data)
+
+        # Проверяем, что кэш удален
+        self.assertIsNone(cache.get(cache_key))
