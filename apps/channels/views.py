@@ -1,6 +1,6 @@
 # Python modules
 import logging
-
+from django.db.models import Q, Count
 # Rest modules
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -14,6 +14,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Project modules
 from .serializers import (
@@ -25,6 +26,7 @@ from .serializers import (
 )
 from .models import Channel, ChannelMembership
 from .permissions import IsTeamMember, IsChannelMember
+from .filters import ChannelFilter
 from django.core.cache import cache
 from .cache import invalidate_channel_cache, invalidate_team_channels_cache
 
@@ -45,11 +47,28 @@ class ChannelViewSet(ViewSet):
     """
     
     permission_classes = [IsAuthenticated, IsTeamMember]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ChannelFilter
+
+    def get_queryset(self):
+        """
+        A basic QuerySet with query optimization and annotations (N+1 avoidance).
+        The user sees all public communication channels and their own private ones.
+        """
+        user = self.request.user
+        qs = Channel.objects.select_related('team').prefetch_related(
+            'members', 'channel_messages'
+        ).annotate(
+            members_count=Count('members', distinct=True),
+            messages_count=Count('channel_messages', distinct=True)
+        )
+        return qs.filter(
+            Q(is_private=False) | Q(is_private=True, members=user)
+        ).distinct()
     
     def get_channel_or_404(self, pk: int) -> tuple[Channel | None, Response | None]:
-        """Helper: returns (channel, None) or (None, 404 Response)"""
         try:
-            channel = Channel.objects.select_related('team').get(pk=pk)
+            channel = self.get_queryset().get(pk=pk)
             self.check_object_permissions(self.request, channel)
             return channel, None
         except Channel.DoesNotExist:
@@ -65,7 +84,7 @@ class ChannelViewSet(ViewSet):
         List all channels in a team.
         Required query parameter: team_id
         """
-        team_id = request.query_params.get('team_id')
+        team_id = request.query_params.get('team') or request.query_params.get('team_id')
         
         if not team_id:
             return Response(
@@ -81,42 +100,45 @@ class ChannelViewSet(ViewSet):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # 1. Формируем ключ кэша и проверяем наличие данных в Redis
         user = request.user
-        cache_key = f"channels_team_{team_id}_user_{user.id}"
+        
+        # 1. Формируем ключ кэша, УЧИТЫВАЯ параметры фильтрации (urlencode)
+        query_string = request.GET.urlencode()
+        cache_key = f"channels_team_{team_id}_user_{user.id}_params_{query_string}"
         cached_data = cache.get(cache_key)
         
         if cached_data:
             logger.info('Channels listed from CACHE: team=%s user=%s', team_id, user.id)
             return Response(cached_data, status=HTTP_200_OK)
         
-        # 2. Если кэша нет — выполняем запросы к БД
-        queryset = Channel.objects.filter(team_id=team_id).select_related('team')
+        # 2. Получаем базовый QuerySet (где уже есть select_related, prefetch_related и аннотации)
+        queryset = self.get_queryset()
         
-        public_channels = queryset.filter(is_private=False)
-        private_channels = queryset.filter(
-            is_private=True,
-            members=user
-        )
+        # Применяем django-filters
+        filterset = self.filterset_class(request.query_params, queryset=queryset, request=request)
+        if filterset.is_valid():
+            queryset = filterset.qs
+        else:
+            return Response(filterset.errors, status=HTTP_400_BAD_REQUEST)
+            
+        # Обязательно ограничиваем выдачу по команде и сортируем
+        queryset = queryset.filter(team_id=team_id).order_by('name')
         
-        all_channels = (public_channels | private_channels).distinct().order_by('name')
-        
-        serializer = ChannelSerializer(all_channels, many=True)
-        
+        serializer = ChannelSerializer(queryset, many=True)
         response_data = {
             'message': 'List of channels',
-            'count': all_channels.count(),
+            'count': queryset.count(),
             'data': serializer.data,
         }
 
-        # 3. Сохраняем результат в кэш на 5 минут (300 секунд)
+        # 3. Сохраняем результат в кэш на 5 минут
         cache.set(cache_key, response_data, timeout=300)
         
         logger.info(
             'Channels listed from DB: team=%s user=%s count=%s',
             team_id,
             user.id,
-            all_channels.count()
+            queryset.count()
         )
         
         return Response(response_data, status=HTTP_200_OK)
@@ -126,18 +148,11 @@ class ChannelViewSet(ViewSet):
         GET /api/channels/{id}/
         Retrieve one channel.
         """
-        # Сначала достаем канал, чтобы проверить права доступа
+        # get_channel_or_404 уже использует get_queryset(), 
+        # который сам отсечет приватные каналы, к которым нет доступа.
         channel, error = self.get_channel_or_404(pk)
         if error:
             return error
-        
-        # Проверка приватности
-        if channel.is_private:
-            if not channel.members.filter(id=request.user.id).exists():
-                return Response(
-                    {'error': 'You do not have access to this private channel.'},
-                    status=HTTP_404_NOT_FOUND
-                )
 
         # 1. Проверяем кэш для сериализованных данных
         cache_key = f"channel_{pk}"
