@@ -48,6 +48,7 @@ class ChannelViewSet(ViewSet):
         """Helper: returns (channel, None) or (None, 404 Response)"""
         try:
             channel = Channel.objects.select_related('team').get(pk=pk)
+            self.check_object_permissions(self.request, channel)
             return channel, None
         except Channel.DoesNotExist:
             logger.warning('Channel not found: id=%s', pk)
