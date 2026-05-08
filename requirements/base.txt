@@ -13,3 +13,4 @@ daphne
 celery
 django-celery-beat
 aiohttp
+django-redis
