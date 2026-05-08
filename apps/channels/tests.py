@@ -204,7 +204,7 @@ class ChannelTests(APITestCase):
         cache.clear()
 
         # 2. Первый запрос: данные берутся из БД. Замеряем количество SQL запросов.
-        with self.assertNumQueries(6): # Число 6 может отличаться в зависимости от вашего кода, подгоните его, посмотрев, сколько запросов идет реально
+        with self.assertNumQueries(4): # Число 6 может отличаться в зависимости от вашего кода, подгоните его, посмотрев, сколько запросов идет реально
             response1 = self.client.get(self.list_url, {'team_id': self.team.id})
         
         self.assertEqual(response1.status_code, 200)
@@ -220,16 +220,26 @@ class ChannelTests(APITestCase):
         self.client.force_authenticate(user=self.team_owner)
         cache.clear()
 
-        # Генерируем кэш
+        # 1. Генерируем кэш (передаем параметры запроса)
         self.client.get(self.list_url, {'team_id': self.team.id})
         
-        # Убеждаемся, что ключ есть в кэше (используйте тот паттерн ключа, который вы реализовали)
-        cache_key = f"channels_team_{self.team.id}_user_{self.team_owner.id}"
-        self.assertIsNotNone(cache.get(cache_key))
+        # 2. Формируем правильный ключ, который ожидает кэш
+        # Строка запроса будет выглядеть как team_id=1 (или другой ID)
+        query_string = f"team_id={self.team.id}"
+        cache_key = f"channels_team_{self.team.id}_user_{self.team_owner.id}_params_{query_string}"
+        
+        # Убеждаемся, что ключ есть в кэше
+        self.assertIsNotNone(
+            cache.get(cache_key), 
+            "Кэш не был создан. Возможно ключ сформирован неправильно."
+        )
 
-        # Обновляем канал
+        # 3. Обновляем канал (это должно вызвать инвалидацию кэша)
         data = {'name': 'new-name'}
         self.client.patch(self.get_detail_url(self.public_channel.id), data)
 
-        # Проверяем, что кэш удален
-        self.assertIsNone(cache.get(cache_key))
+        # 4. Проверяем, что кэш удален
+        self.assertIsNone(
+            cache.get(cache_key),
+            "Кэш не был очищен после обновления. Проверьте функцию инвалидации кэша."
+        )
