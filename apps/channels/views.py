@@ -25,6 +25,8 @@ from .serializers import (
 )
 from .models import Channel, ChannelMembership
 from .permissions import IsTeamMember, IsChannelMember
+from django.core.cache import cache
+from .cache import invalidate_channel_cache, invalidate_team_channels_cache
 
 logger = logging.getLogger(__name__)
 
@@ -78,12 +80,19 @@ class ChannelViewSet(ViewSet):
                 {'error': 'team_id must be a valid integer.'},
                 status=HTTP_400_BAD_REQUEST
             )
+
+        # 1. Формируем ключ кэша и проверяем наличие данных в Redis
+        user = request.user
+        cache_key = f"channels_team_{team_id}_user_{user.id}"
+        cached_data = cache.get(cache_key)
         
-        # Get channels - public ones + private ones where user is member
+        if cached_data:
+            logger.info('Channels listed from CACHE: team=%s user=%s', team_id, user.id)
+            return Response(cached_data, status=HTTP_200_OK)
+        
+        # 2. Если кэша нет — выполняем запросы к БД
         queryset = Channel.objects.filter(team_id=team_id).select_related('team')
         
-        # Filter: show public channels OR private channels where user is member
-        user = request.user
         public_channels = queryset.filter(is_private=False)
         private_channels = queryset.filter(
             is_private=True,
@@ -94,43 +103,62 @@ class ChannelViewSet(ViewSet):
         
         serializer = ChannelSerializer(all_channels, many=True)
         
+        response_data = {
+            'message': 'List of channels',
+            'count': all_channels.count(),
+            'data': serializer.data,
+        }
+
+        # 3. Сохраняем результат в кэш на 5 минут (300 секунд)
+        cache.set(cache_key, response_data, timeout=300)
+        
         logger.info(
-            'Channels listed: team=%s user=%s count=%s',
+            'Channels listed from DB: team=%s user=%s count=%s',
             team_id,
             user.id,
             all_channels.count()
         )
         
-        return Response(
-            {
-                'message': 'List of channels',
-                'count': all_channels.count(),
-                'data': serializer.data,
-            },
-            status=HTTP_200_OK
-        )
+        return Response(response_data, status=HTTP_200_OK)
     
     def retrieve(self, request: Request, pk: int = None) -> Response:
         """
         GET /api/channels/{id}/
         Retrieve one channel.
         """
+        # Сначала достаем канал, чтобы проверить права доступа
         channel, error = self.get_channel_or_404(pk)
         if error:
             return error
         
-        # Check permission: public OR user is member
+        # Проверка приватности
         if channel.is_private:
             if not channel.members.filter(id=request.user.id).exists():
                 return Response(
                     {'error': 'You do not have access to this private channel.'},
                     status=HTTP_404_NOT_FOUND
                 )
+
+        # 1. Проверяем кэш для сериализованных данных
+        cache_key = f"channel_{pk}"
+        cached_channel_data = cache.get(cache_key)
+
+        if cached_channel_data:
+            logger.info('Channel retrieved from CACHE: id=%s by user=%s', pk, request.user.id)
+            return Response(
+                {
+                    'message': 'Channel detail',
+                    'data': cached_channel_data,
+                },
+                status=HTTP_200_OK
+            )
         
+        # 2. Если в кэше нет — сериализуем и сохраняем
         serializer = ChannelSerializer(channel)
+        cache.set(cache_key, serializer.data, timeout=600)  # 10 минут
         
         logger.info(
-            'Channel retrieved: id=%s by user=%s',
+            'Channel retrieved from DB: id=%s by user=%s',
             pk,
             request.user.id
         )
@@ -165,6 +193,9 @@ class ChannelViewSet(ViewSet):
             )
         
         channel = serializer.save()
+
+        # ИНВАЛИДАЦИЯ: Сбрасываем кэш списков каналов для всей команды
+        invalidate_team_channels_cache(channel.team.id)
         
         logger.info(
             'Channel created: id=%s name=%s team=%s by user=%s',
@@ -210,6 +241,10 @@ class ChannelViewSet(ViewSet):
             )
         
         channel = serializer.save()
+
+        # ИНВАЛИДАЦИЯ: Сбрасываем кэш самого канала и списков команды
+        invalidate_channel_cache(channel.id)
+        invalidate_team_channels_cache(channel.team.id)
         
         logger.info(
             'Channel updated: id=%s by user=%s',
@@ -236,7 +271,13 @@ class ChannelViewSet(ViewSet):
         
         channel_id = channel.id
         channel_name = channel.name
+        team_id = channel.team.id
+        
         channel.delete()
+
+        # ИНВАЛИДАЦИЯ: Сбрасываем кэш удаленного канала и списков команды
+        invalidate_channel_cache(channel_id)
+        invalidate_team_channels_cache(team_id)
         
         logger.info(
             'Channel deleted: id=%s name=%s by user=%s',
@@ -328,6 +369,11 @@ class ChannelViewSet(ViewSet):
             )
         
         membership = serializer.save()
+
+        # Если состав участников канала изменился, его количество участников тоже,
+        # так что на всякий случай инвалидируем кэш деталей канала и списков.
+        invalidate_channel_cache(channel.id)
+        invalidate_team_channels_cache(channel.team.id)
         
         logger.info(
             'Channel member added: channel=%s user=%s',
@@ -365,6 +411,10 @@ class ChannelViewSet(ViewSet):
             )
         
         membership.delete()
+
+        # Также инвалидируем кэш при удалении участника
+        invalidate_channel_cache(channel.id)
+        invalidate_team_channels_cache(channel.team.id)
         
         logger.info(
             'Channel member removed: channel=%s user=%s',
