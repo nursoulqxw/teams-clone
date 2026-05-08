@@ -113,8 +113,8 @@ class CreateChannelSerializer(ModelSerializer):
         request = self.context.get('request')
         if request and request.user:
             # fdfsd
-            # if not team.members.filter(id=request.user.id).exists():
-            #    raise ValidationError("You must be a team member to create channels")
+            if not team.members.filter(id=request.user.id).exists():
+                raise ValidationError("You must be a team member to create channels")
             pass
 
         return attrs
