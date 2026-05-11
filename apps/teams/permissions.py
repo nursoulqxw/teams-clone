@@ -10,7 +10,7 @@ class IsTeamOwnerOrAdmin(BasePermission):
 	Object may be a `Team` or a model with a `team` attribute (e.g. TeamMembership).
 	"""
 
-	def has_object_permission(self, request, view, obj):
+	def has_object_permission(self, request, obj):
 		user = request.user
 
 		if request.method in SAFE_METHODS:
