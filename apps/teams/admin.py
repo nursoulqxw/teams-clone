@@ -4,7 +4,7 @@ from django.contrib.admin import(
 ) 
 
 #Project imports
-from apps.team.models import Team,TeamMembership
+from apps.teams.models import Team,TeamMembership
 
 
 @register(Team)
