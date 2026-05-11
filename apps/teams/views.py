@@ -47,6 +47,10 @@ from .permissions import (
 )
 from .filters import build_team_q,build_membership_q
 
+#tasks
+from .tasks import send_team_invitation
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -515,6 +519,26 @@ class TeamViewSet(ViewSet):
             membership.id,
             membership.role
         )
+
+        try:
+            send_team_invitation.delay(
+                team_id=team.id, 
+                user_id=membership.user.id, 
+                added_by_id=request.user.id
+            )
+            logger.info(
+                'Team invitation task queued: team=%s user=%s',
+                team.id,
+                membership.user.id
+             )
+        except Exception as e:
+            logger.error(
+                'Failed to queue team invitation task: team=%s user=%s error=%s',
+                team.id,
+                membership.user.id,
+                str(e)
+             )
+
         return Response(
             {
                 'message': 'Member added successfully',
