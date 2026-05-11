@@ -6,16 +6,17 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/",include("apps.team.urls")),
-    path("api/users/", include("apps.users.urls")),
-    path('api/channels/', include('apps.channels.urls')),
-    path("api/", include("apps.messages.urls")),
-    path("api/assignment/",include("apps.assigments.urls")),
-    
-    # API schema & docs
+
+    # API schema & docs — must be before generic api/ includes
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+
+    path("api/", include("apps.team.urls")),
+    path("api/users/", include("apps.users.urls")),
+    path("api/channels/", include("apps.channels.urls")),
+    path("api/", include("apps.messages.urls")),
+    path("api/assignment/", include("apps.assigments.urls")),
 
     # ── Apps urls will be included here by each team member ──────────────────
     # Example:
@@ -25,14 +26,13 @@ urlpatterns = [
     # path("api/messages/", include("apps.messages.urls")),
 ]
 if settings.DEBUG:
-    # Добавляем раздачу медиафайлов
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
-    
-    # Подключаем URLs для Debug Toolbar
-    import debug_toolbar
-    urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ]
+
+    try:
+        import debug_toolbar
+        urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
+    except ImportError:
+        pass

@@ -13,6 +13,9 @@ DB_PASSWORD = config("DB_PASSWORD", default="")
 DB_HOST = config("DB_HOST", default="")
 DB_PORT = config("DB_PORT", default="")
 
+# ── Redis ─────────────────────────────────────────────────────────────────────
+REDIS_URL = config("REDIS_URL", default="redis://127.0.0.1:6379/1")
+
 # ── JWT ───────────────────────────────────────────────────────────────────────
 JWT_ACCESS_TOKEN_LIFETIME_MINUTES = config("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default=60, cast=int)
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
