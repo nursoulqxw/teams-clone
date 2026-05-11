@@ -1,67 +1,79 @@
-
-from typing import Any
+# Python modules
 import logging
-# Create your views here.
+from typing import Any
+
+# Django modules
+from django.db.models import Q
+from django.utils.decorators import method_decorator
+
+# DRF modules
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+)
 from rest_framework.viewsets import ViewSet
 
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-from rest_framework.request import Request
-from apps.users.serializers import (
-    CustomUserSerializer,
-    RegisterSerializer,
-    LoginSerializer,
-    AccessTokenResponseSerializer,
-    TokenPairResponseSerializer,
-    ErrorResponseSerializer,
-    MessageResponseSerializer,
-)
-from apps.users.models import CustomUser
-from rest_framework_simplejwt.tokens import RefreshToken
+# SimpleJWT modules
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from django_ratelimit.decorators import ratelimit
-from django.utils.decorators import method_decorator
-from django.db.models import Q
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from .permissions import IsOwnerOrAdmin
-from rest_framework import status
-#drf-spectacular
-from drf_spectacular.utils import(
-    extend_schema, 
-    OpenApiResponse,
-    OpenApiParameter,
+from rest_framework_simplejwt.tokens import RefreshToken
+
+# drf-spectacular modules
+from drf_spectacular.utils import (
     OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
 )
-from rest_framework import serializers
+
+# Third-party modules
+from django_ratelimit.decorators import ratelimit
+
+# Project modules
+from apps.users.models import CustomUser
+from apps.users.serializers import (
+    AccessTokenResponseSerializer,
+    CustomUserSerializer,
+    ErrorResponseSerializer,
+    LoginSerializer,
+    MessageResponseSerializer,
+    RegisterSerializer,
+    TokenPairResponseSerializer,
+)
+from .permissions import IsOwnerOrAdmin
+
 
 logger = logging.getLogger(__name__)
+
 
 class AuthViewSet(ViewSet):
     """
     Users can register, login, refresh tokens, logout, and manage their profile.
-    -Post /users/register/ - Register a new user
-    -Post /users/login/ - Login and receive JWT tokens
-    -Post /users/token/refresh/ - Refresh access token using refresh token
-    -Post /users/logout/ - Logout and blacklist refresh token
-    -Get/Patch /users/me/ - Retrieve or update own profile
-    -Get /users/ - List all users (admin only)
 
+    - POST /users/register/       - Register a new user
+    - POST /users/login/          - Login and receive JWT tokens
+    - POST /users/token/refresh/  - Refresh access token using refresh token
+    - POST /users/logout/         - Logout and blacklist refresh token
+    - GET  /users/me/             - Retrieve own profile
+    - PATCH /users/me/update/     - Update own profile
+    - GET  /users/                - List all users (admin only)
     """
 
-    def get_permissions(self):
+    def get_permissions(self) -> list:
+        """Return permissions based on action."""
         if self.action in {"register", "login", "refresh"}:
             return [AllowAny()]
-        if self.action in {"me"}:
+        if self.action in {"me", "me_update"}:
             return [IsAuthenticated(), IsOwnerOrAdmin()]
-       
-        if self.action in {"logout", "list"}:
-            return [IsAuthenticated()]
         return [IsAuthenticated()]
-    
+
     @extend_schema(
-        summary="login (get JWT tokens)",
+        summary="Login (get JWT tokens)",
         description="Authenticate user and return JWT access and refresh tokens.",
         request=LoginSerializer,
         responses={
@@ -76,31 +88,25 @@ class AuthViewSet(ViewSet):
         },
         tags=["Auth"],
         examples=[
-            OpenApiExample (
+            OpenApiExample(
                 "Login success",
                 value={
                     "access": "access_token",
-                    "refresh": "refresh_token"
+                    "refresh": "refresh_token",
                 },
                 response_only=True,
             ),
         ],
     )
-
     @action(detail=False, methods=["post"], url_path="login")
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
-    def login(
-        self,
-        request: Request,
-        *args: tuple,
-        **kwargs: dict,
-    ) -> Response:
-        email = request.data.get("email")
+    def login(self, request: Request) -> Response:
+        """Authenticate user and return JWT tokens."""
         logger.info(f"Login attempt with email: {request.data.get('email')}")
+
         serializer = LoginSerializer(
             data=request.data,
             context={"request": request},
-            
         )
 
         if serializer.is_valid():
@@ -114,12 +120,12 @@ class AuthViewSet(ViewSet):
                 },
                 status=HTTP_200_OK,
             )
-        
+
         logger.warning(f"Login failed with errors: {serializer.errors}")
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
     @extend_schema(
-        summary="register",
+        summary="Register",
         description="Register a new user with email, password, first name, and last name.",
         request=RegisterSerializer,
         responses={
@@ -134,7 +140,7 @@ class AuthViewSet(ViewSet):
         },
         tags=["Auth"],
         examples=[
-            OpenApiExample (
+            OpenApiExample(
                 "Registration success",
                 value={
                     "email": "test@example.com",
@@ -147,16 +153,12 @@ class AuthViewSet(ViewSet):
             ),
         ],
     )
-
     @action(detail=False, methods=["post"], url_path="register")
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
-    def register(
-        self,
-        request: Request,
-       
-    ) -> Response:
-        email = request.data.get("email")
+    def register(self, request: Request) -> Response:
+        """Register a new user."""
         logger.info(f"Registration attempt with email: {request.data.get('email')}")
+
         serializer = RegisterSerializer(
             data=request.data,
             context={"request": request},
@@ -172,53 +174,43 @@ class AuthViewSet(ViewSet):
                 },
                 status=HTTP_200_OK,
             )
-        
+
         logger.warning(f"Registration failed with errors: {serializer.errors}")
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
-        summary="refresh access token",
+        summary="Refresh access token",
         description="Refresh JWT access token using a valid refresh token.",
-        request=AccessTokenResponseSerializer,
+        request=TokenRefreshSerializer,
         responses={
             HTTP_200_OK: OpenApiResponse(
                 description="Token refresh successful",
                 response=AccessTokenResponseSerializer,
             ),
-            HTTP_400_BAD_REQUEST: OpenApiResponse(
-                description="Invalid or expired refresh token", 
+            HTTP_401_UNAUTHORIZED: OpenApiResponse(
+                description="Invalid or expired refresh token",
                 response=ErrorResponseSerializer,
             ),
         },
         tags=["Auth"],
         examples=[
-            OpenApiExample (
+            OpenApiExample(
                 "Refresh request",
-                value={
-                    "refresh": "refresh_token",
-                    
-                },
+                value={"refresh": "refresh_token"},
                 request_only=True,
             ),
-            OpenApiExample (
+            OpenApiExample(
                 "Refresh success",
-                value={
-                    "access": "new_access_token",  
-                },
+                value={"access": "new_access_token"},
                 response_only=True,
             ),
         ],
-    )   
-
-
-        
+    )
     @action(detail=False, methods=["post"], url_path="token/refresh")
-    def refresh(
-        self,
-        request: Request,
-        
-    ) -> Response:
-        logger.info(f"Token refresh attempt for email: {request.data.get('email')}")
+    def refresh(self, request: Request) -> Response:
+        """Refresh access token using refresh token."""
+        logger.info("Token refresh attempt")
+
         serializer = TokenRefreshSerializer(data=request.data)
 
         try:
@@ -228,56 +220,81 @@ class AuthViewSet(ViewSet):
             raise InvalidToken(e)
 
         logger.info("Token refresh successful")
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(serializer.validated_data, status=HTTP_200_OK)
 
     @extend_schema(
-    summary="refresh access token",
-    description="Refresh JWT access token using a valid refresh token.",
-    request=TokenRefreshSerializer,
-    responses={
-        HTTP_200_OK: OpenApiResponse(
-            description="Token refresh successful",
-            response=AccessTokenResponseSerializer,
-        ),
-        status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
-            description="Invalid or expired refresh token",
-            response=ErrorResponseSerializer,
-        ),
-    },
-    tags=["Auth"],
-)
-            
-    
+        summary="Logout",
+        description="Logout and blacklist the refresh token.",
+        responses={
+            HTTP_200_OK: OpenApiResponse(
+                description="Logout successful",
+                response=MessageResponseSerializer,
+            ),
+            HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description="Invalid token",
+                response=ErrorResponseSerializer,
+            ),
+        },
+        tags=["Auth"],
+    )
     @action(detail=False, methods=["post"], url_path="logout")
-    def logout(
-        self,
-        request: Request,
-        
-    ) -> Response:
+    def logout(self, request: Request) -> Response:
+        """Logout and blacklist refresh token."""
         logger.info(f"Logout attempt for email: {request.user.email}")
+
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response({"error": "Refresh token required"}, status=HTTP_400_BAD_REQUEST)
+
         try:
-            refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
             token.blacklist()
             logger.info(f"Logout successful for email: {request.user.email}")
             return Response({"message": "Logout successful"}, status=HTTP_200_OK)
         except Exception as e:
-            logger.warning(f"Logout failed with error: {str(e)} for email: {request.user.email}")
+            logger.warning(
+                f"Logout failed with error: {str(e)} for email: {request.user.email}"
+            )
             return Response({"error": "Invalid token"}, status=HTTP_400_BAD_REQUEST)
-        
-    @extend_schema (
-        summary="get or update my profile",
-        description="Retrieve or update the authenticated user's profile information.",
+
+    @extend_schema(
+        summary="Get my profile",
+        description="Retrieve the authenticated user's profile information.",
         responses={
             HTTP_200_OK: OpenApiResponse(
-                description="Profile retrieved or updated successfully",
-                response = CustomUserSerializer
+                description="Profile retrieved successfully",
+                response=CustomUserSerializer,
             ),
+        },
+        tags=["Users"],
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me",
+        permission_classes=[IsAuthenticated, IsOwnerOrAdmin],
+    )
+    @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
+    def me(self, request: Request) -> Response:
+        """Retrieve own profile."""
+        user = request.user
+        self.check_object_permissions(request, user)
+        return Response(CustomUserSerializer(user).data, status=HTTP_200_OK)
 
+    @extend_schema(
+        summary="Update my profile",
+        description="Update the authenticated user's profile information.",
+        request=CustomUserSerializer,
+        responses={
+            HTTP_200_OK: OpenApiResponse(
+                description="Profile updated successfully",
+                response=CustomUserSerializer,
+            ),
         },
         tags=["Users"],
         examples=[
-            OpenApiExample (
+            OpenApiExample(
                 "Patch example",
                 value={
                     "first_name": "John",
@@ -286,27 +303,27 @@ class AuthViewSet(ViewSet):
                 request_only=True,
             ),
         ],
-    )      
-            
-    
-    @method_decorator(ratelimit(key="ip", rate="5/m", block=True), name="me")
-    @action(detail=False, methods=["get", "patch"], url_path="me",
-        permission_classes=[IsAuthenticated, IsOwnerOrAdmin])
-    def me(self, request):
+    )
+    @action(
+        detail=False,
+        methods=["patch"],
+        url_path="me/update",
+        permission_classes=[IsAuthenticated, IsOwnerOrAdmin],
+    )
+    @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
+    def me_update(self, request: Request) -> Response:
+        """Update own profile."""
         user = request.user
-
-        if request.method.lower() == "get":
-            self.check_object_permissions(request, user)
-            return Response(CustomUserSerializer(user).data, status=HTTP_200_OK)
-
         self.check_object_permissions(request, user)
+
         serializer = CustomUserSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
         return Response(CustomUserSerializer(serializer.instance).data, status=HTTP_200_OK)
 
     @extend_schema(
-        summary="list users (admin only)",
+        summary="List users (admin only)",
         description="List all users in the system. Admin access required.",
         parameters=[
             OpenApiParameter(
@@ -314,7 +331,7 @@ class AuthViewSet(ViewSet):
                 description="Search users by email, first name, or last name",
                 required=False,
                 type=str,
-            )
+            ),
         ],
         responses={
             HTTP_200_OK: OpenApiResponse(
@@ -324,23 +341,22 @@ class AuthViewSet(ViewSet):
         },
         tags=["Users"],
     )
-    def list(
-            self,           
-            request: Request,
-        ) -> Response:
-            search = request.query_params.get("search")
-            queryset = CustomUser.objects.all().order_by("id")
-            if search:
-                queryset = queryset.filter(
-                    Q(email__icontains=search) |
-                    Q(first_name__icontains=search) |
-                    Q(last_name__icontains=search)
-                )   
-            logger.info(f"User list requested by id {request.user.id} with email {request.user.email}")
-            return Response(
-                CustomUserSerializer(queryset, many=True).data,
-                status=HTTP_200_OK,
-            )
-    
-    
+    def list(self, request: Request) -> Response:
+        """List all users with optional search filter."""
+        search = request.query_params.get("search")
+        queryset = CustomUser.objects.all().order_by("id")
 
+        if search:
+            queryset = queryset.filter(
+                Q(email__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+            )
+
+        logger.info(
+            f"User list requested by id {request.user.id} with email {request.user.email}"
+        )
+        return Response(
+            CustomUserSerializer(queryset, many=True).data,
+            status=HTTP_200_OK,
+        )
