@@ -68,14 +68,19 @@ def send_weekly_summary():
                 [owner.email],
                 fail_silently=False,
             )
-            logger.info(f"Weekly summary sent to {owner.email} for team '{team.name}'")
+            logger.info(
+                'Weekly summary sent to %s for team "%s"', 
+                owner.email, team.name
+            )
         except Exception as e:
             logger.error(
-                f"Failed to send weekly summary to {owner.email} for team '{team.name}': {e}"
+                'Failed to send weekly summary to %s for team "%s": %s', 
+                owner.email, team.name, str(e)
             )
     logger.info(
-        f"Weekly summary task completed. Processed {processed_teams} teams."
-        )
+        'Weekly summary task completed. Processed %d teams.', 
+        processed_teams
+    )
     return {
         "status": "success",
         "report": report_lines,
@@ -120,10 +125,12 @@ def cleanup_inactive_teams():
                 'Error deleting team: %s (ID: %d) - %s', 
                 team.name, team.id, str(e)
             )
+
     logger.info(
         "Cleanup of inactive teams completed. Deleted %d teams.", 
         count
     )
+
     return {
         "status": "success",
         "deleted_teams_count": count,
