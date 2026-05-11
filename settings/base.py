@@ -39,7 +39,7 @@ ASGI_APPLICATION = "settings.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+        "CONFIG": {"hosts": [REDIS_URL]},
     }
 }
 
@@ -212,9 +212,9 @@ SPECTACULAR_SETTINGS = {
 
 
 #CELERY SETTINGS
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+CELERY_BROKER_URL = REDIS_URL
 
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/1"
+CELERY_RESULT_BACKEND = REDIS_URL
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
@@ -229,7 +229,7 @@ CELERY_BEAT_SCHEDULE = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
