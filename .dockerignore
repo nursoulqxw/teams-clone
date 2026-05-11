@@ -30,6 +30,7 @@ logs/
 #Generated at runtime / build
 staticfiles/
 media/
+db.sqlite3
 
 #Editor & OS
 .DS_Store

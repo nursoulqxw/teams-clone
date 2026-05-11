@@ -94,8 +94,9 @@ class AssigmentsViewSet(ViewSet):
         elif self.action == 'submit_assignment':
             if self.request and self.request.method == 'POST':
                 return [IsAuthenticated(), IsTeamMember()]
-        elif self.action == 'submissions' or self.action == 'grade':
+        elif self.action in ['submissions', 'grade']:
             return [IsAuthenticated(), IsTeamOwner()]
+        return [IsAuthenticated()]
 
     def get_assigment_or_404(
         self, 
