@@ -10,7 +10,7 @@ RUN apt-get update && \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements/prod.txt requirements/prod.txt
+COPY requirements/ requirements/
 RUN pip install --no-cache-dir --prefix=/install -r requirements/prod.txt
 
 
@@ -26,9 +26,10 @@ COPY --from=builder /install /usr/local
 
 COPY . .
 
-RUN python manage.py collectstatic --noinput
-
-RUN addgroup --system django && adduser --system --ingroup django django
+RUN addgroup --system django && adduser --system --ingroup django django \
+    && mkdir -p /app/logs /app/staticfiles /app/media \
+    && chown -R django:django /app/logs /app/staticfiles /app/media \
+    && chmod +x /app/entrypoint.sh
 USER django
 
 EXPOSE 7777
