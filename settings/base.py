@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     # Local apps  ← team members will add their apps here
     "apps.abstract",
     "apps.users",
-    "apps.team",
+    "apps.teams",
     "apps.channels",
     "apps.messages",
     "apps.assigments"
@@ -213,8 +213,15 @@ SPECTACULAR_SETTINGS = {
 
 #CELERY SETTINGS
 CELERY_BROKER_URL = REDIS_URL
-
 CELERY_RESULT_BACKEND = REDIS_URL
+
+CEELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = "UTC"
+
+
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
