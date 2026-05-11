@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 from .models import Assignments
-from apps.team.models import Team
+from apps.teams.models import Team
 
 
 class IsTeamOwner(BasePermission):

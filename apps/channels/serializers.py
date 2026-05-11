@@ -14,7 +14,7 @@ from rest_framework.serializers import (
 
 #Project import
 from .models import Channel, ChannelMembership
-from apps.team.models import Team
+from apps.teams.models import Team
 from apps.users.models import CustomUser
 from apps.users.serializers import UserListSerializer
 

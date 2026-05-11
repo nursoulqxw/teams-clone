@@ -14,7 +14,7 @@ from django.db.models import (
 # Project imports
 from apps.abstract.models import AbstractModel
 from apps.users.models import CustomUser
-from apps.team.models import Team
+from apps.teams.models import Team
 
 class  Channel(AbstractModel):
     """

@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
 from apps.users.models import CustomUser
-from apps.team.models import Team, TeamMembership
+from apps.teams.models import Team, TeamMembership
 from apps.channels.models import Channel
 from apps.messages.models import Message
 

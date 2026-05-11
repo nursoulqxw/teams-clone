@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from apps.users.models import CustomUser
-from apps.team.models import Team, TeamMembership
+from apps.teams.models import Team, TeamMembership
 from apps.channels.models import Channel, ChannelMembership
 from django.core.cache import cache
 

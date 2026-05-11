@@ -14,7 +14,7 @@ from django.db.models import (
 )
 from apps.abstract.models import AbstractModel
 
-from apps.team.models import Team
+from apps.teams.models import Team
 from apps.users.models import CustomUser
 
 
