@@ -12,6 +12,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+
 @shared_task
 def send_weekly_summary():
     """
@@ -87,6 +88,7 @@ def send_weekly_summary():
         "processed_teams": processed_teams
     }
 
+
 @shared_task
 def cleanup_inactive_teams():
     """
@@ -136,5 +138,79 @@ def cleanup_inactive_teams():
         "deleted_teams_count": count,
         "deleted_teams": [team.name for team in inactive_teams]
     }
+
+
+@shared_task
+def send_team_invitation(team_id: int, user_id: int, added_by_id: int):
+    """
+    Task to send an email invitation to a user when they are added to a team
+    """
+    from apps.teams.models import Team
+    from apps.users.models import CustomUser
+
+    try:
+        team = Team.objects.get(id=team_id)
+        user = CustomUser.objects.get(id=user_id)
+        added_by = CustomUser.objects.get(id=added_by_id)
+
+        subject = f"You've been added to the team: {team.name}"
+        message = (
+            f"Hello {user.first_name},\n\n"
+            f"You have been added to the team '{team.name}' by {added_by.first_name}.\n"
+            "Please log in to your account to access the team and start collaborating!\n\n"
+            "Best regards,\n"
+            "Team Management System"
+        )
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        logger.info(
+            'Sent team invitation to %s for team "%s"', 
+            user.email, team.name
+        )
+    except Exception as e:
+        logger.error(
+            'Failed to send team invitation to user ID %d for team ID %d: %s', 
+            user_id, team_id, str(e)
+        )
+    
+    subject = f"You've been added to the team: {team.name}"
+    body = (
+        f"Hello {user.first_name},\n\n"
+        f"You have been added to the team '{team.name}' by {added_by.first_name}.\n"
+        "Please log in to your account to access the team and start collaborating!\n\n"
+        "Best regards,\n"
+        "Team Management System"
+    )
+    
+    try:
+        send_mail(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+             fail_silently=False,
+         )
+        logger.info(
+            'Sent team invitation to %s for team "%s"', 
+            user.email, team.name
+        )
+    except Exception as e:
+        logger.error(
+            'Failed to send team invitation to user ID %d for team ID %d: %s', 
+            user_id, team_id, str(e)
+        )
+    
+    return {
+        "status": "success",
+        "team": team.name,
+        "user": user.email,
+        "added_by": added_by.email
+    }
+
 
 
