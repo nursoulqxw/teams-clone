@@ -25,14 +25,13 @@ urlpatterns = [
     # path("api/messages/", include("apps.messages.urls")),
 ]
 if settings.DEBUG:
-    # Добавляем раздачу медиафайлов
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
-    
-    # Подключаем URLs для Debug Toolbar
-    import debug_toolbar
-    urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ]
+
+    try:
+        import debug_toolbar
+        urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
+    except ImportError:
+        pass
