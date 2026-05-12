@@ -1,6 +1,9 @@
 #Python modules
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings.env.local")
+from decouple import config
+
+env_id = config("TEAMS_ENV_ID", default="prod")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"settings.env.{env_id}")
 
 #Django modules
 from django.core.asgi import get_asgi_application

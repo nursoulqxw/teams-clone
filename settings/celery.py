@@ -1,10 +1,9 @@
 import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings.env.local')
+
 from django.conf import settings
 from celery import Celery
 from celery.schedules import crontab
-
-# Set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings.env.local')
 
 app = Celery('teams')
 
