@@ -2,9 +2,10 @@
 import logging
 
 #Rest modules
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.viewsets import ViewSet
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
@@ -12,8 +13,6 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
     HTTP_204_NO_CONTENT,
 )
-from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated
 
 #Project modules
 from .models import Message
@@ -27,6 +26,7 @@ from .tasks import send_message_notification
 from .permissions import IsAuthorOrReadOnly
 
 logger = logging.getLogger(__name__)
+
 
 class MessageViewSet(ViewSet):
     """
@@ -43,7 +43,9 @@ class MessageViewSet(ViewSet):
     def get_message_or_404(
         self,
         pk: int
-    ) -> tuple[Message | None, Response | None]:
+    ) -> tuple[
+        Message | None, Response | None
+        ]:
         """Helper: returns (message, None) or (None, 404 Response)"""
         try:
             message = Message.objects.select_related(
@@ -73,9 +75,10 @@ class MessageViewSet(ViewSet):
         except Exception:
             return False
         
-
-
-    def list(self, request: Request) -> Response:
+    def list(
+        self, 
+        request: Request
+    ) -> dict:
         """
         GET api/messages/ — list messages
         Optional filter: ?channel=<id>
@@ -109,8 +112,16 @@ class MessageViewSet(ViewSet):
             status=HTTP_200_OK,
         )
     
-    def retrieve(self, request: Request, pk: int = None) -> Response:
-        """GET api/messages/{id}/ — retrieve one message"""
+    def retrieve(
+        self, 
+        request: Request, 
+        pk: int = None
+        ) -> dict:
+
+        """
+        GET api/messages/{id}/ — retrieve one message
+        """
+
         user = request.user
         message, error = self.get_message_or_404(pk)
         if error:
@@ -138,8 +149,15 @@ class MessageViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
-    def create(self, request: Request) -> Response:
-        """POST api/messages/ — create a message"""
+    def create(
+        self, 
+        request: Request
+        ) -> Response:
+
+        """
+        POST api/messages/ — create a message
+        """
+
         serializer = CreateMessageSerializer(
             data=request.data,
             context={"request": request},
@@ -157,7 +175,10 @@ class MessageViewSet(ViewSet):
             )
 
         message = serializer.save()
-        send_message_notification.delay(message.id, request.user.email)
+        send_message_notification.delay(
+            message.id, 
+            request.user.email
+        )
 
         return Response(
             {
@@ -167,8 +188,16 @@ class MessageViewSet(ViewSet):
             status=HTTP_201_CREATED,
         )
 
-    def partial_update(self, request: Request, pk: int = None) -> Response:
-        """PATCH api/messages/{id}/ — update message (content only)"""
+    def partial_update(
+        self, 
+        request: Request, 
+        pk: int = None
+    ) -> Response:
+        
+        """
+        PATCH api/messages/{id}/ — update message (content only)
+        """
+
         user = request.user
         message, error = self.get_message_or_404(pk)
         if error:
@@ -215,8 +244,16 @@ class MessageViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
-    def destroy(self, request: Request, pk: int = None) -> Response:
-        """DELETE api/messages/{id}/ — delete message"""
+    def destroy(
+        self, 
+        request: Request, 
+        pk: int = None
+    ) -> Response:
+        
+        """
+        DELETE api/messages/{id}/ — delete message
+        """
+        
         user = request.user
         message, error = self.get_message_or_404(pk)
         if error:
