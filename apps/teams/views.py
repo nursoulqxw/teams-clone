@@ -1,64 +1,59 @@
 # Python modules
 import logging
 
-# Rest modules
-from rest_framework.response import Response
+# Django REST Framework
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_204_NO_CONTENT,
 )
 from rest_framework.viewsets import ViewSet
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 
 # drf-spectacular
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
     extend_schema,
     extend_schema_view,
-    OpenApiParameter,
-    OpenApiResponse,
-    OpenApiExample,
 )
-from drf_spectacular.types import OpenApiTypes
-
-from .permissions import IsTeamOwnerOrAdmin, IsTeamMember
 
 # Project modules
-from .serializers import (
-    TeamSerializer,
-    CreateTeamSerializer,
-    UpdateTeamSerializer,
-    TeamMembershipSerializer,
-    CreateTeamMembershipSerializer,
-)
+from apps.assigments.models import Assignments
 from apps.assigments.serializers import (
     AssigmentsSerialzers,
-    CreateAssigmentsSerializers
+    CreateAssigmentsSerializers,
 )
-from .models import Team, TeamMembership
-from apps.assigments.models import Assignments
-from .permissions import (
-    IsTeamOwnerOrAdmin,
-    IsTeamMember
-)
-from .filters import build_team_q,build_membership_q
 
-#tasks
+from .filters import build_membership_q, build_team_q
+from .models import Team, TeamMembership
+from .permissions import IsTeamMember, IsTeamOwnerOrAdmin
+from .serializers import (
+    CreateTeamMembershipSerializer,
+    CreateTeamSerializer,
+    TeamMembershipSerializer,
+    TeamSerializer,
+    UpdateTeamSerializer,
+)
 from .tasks import send_team_invitation
 
 
 logger = logging.getLogger(__name__)
 
+TEAM_TAG = 'Teams'
+TEAM_MEMBERS_TAG = 'Team Members'
 
 @extend_schema_view(
     list=extend_schema(
         summary='List all teams',
         description='Supports filtering.',
-        tags=['Teams'],
+        tags=[TEAM_TAG],
         responses={
             200: OpenApiResponse(
                 response=TeamSerializer(many=True),
@@ -68,36 +63,49 @@ logger = logging.getLogger(__name__)
     ),
     retrieve=extend_schema(
         summary='Retrieve a team',
-        tags=['Teams'],
+        tags=[TEAM_TAG],
         responses={
-            200: OpenApiResponse(response=TeamSerializer, description='Team found'),
-            404: OpenApiResponse(description='Team not found'),
+            200: OpenApiResponse(
+                response=TeamSerializer, 
+                description='Team found'
+            ),
+            404: OpenApiResponse(
+                description='Team not found'
+            ),
         },
     ),
     create=extend_schema(
         summary='Create a team',
-        tags=['Teams'],
+        tags=[TEAM_TAG],
         request=CreateTeamSerializer,
         responses={
-            201: OpenApiResponse(response=TeamSerializer, description='Team created successfully'),
+            201: OpenApiResponse(
+                response=TeamSerializer, 
+                description='Team created successfully'
+            ),
             400: OpenApiResponse(description='Validation error'),
         },
     ),
     partial_update=extend_schema(
         summary='Update a team (PATCH)',
-        tags=['Teams'],
+        tags=[TEAM_TAG],
         request=UpdateTeamSerializer,
         responses={
-            200: OpenApiResponse(response=TeamSerializer, description='Team updated successfully'),
+            200: OpenApiResponse(
+                response=TeamSerializer, 
+                description='Team updated successfully'
+            ),
             400: OpenApiResponse(description='Validation error'),
             404: OpenApiResponse(description='Team not found'),
         },
     ),
     destroy=extend_schema(
         summary='Delete a team',
-        tags=['Teams'],
+        tags=[TEAM_TAG],
         responses={
-            204: OpenApiResponse(description='Team deleted successfully'),
+            204: OpenApiResponse(
+                description='Team deleted successfully'
+            ),
             404: OpenApiResponse(description='Team not found'),
         },
     ),
@@ -115,7 +123,7 @@ class TeamViewSet(ViewSet):
         GET    api/teams/{id}/members/ - list members of team
         POST   api/teams/{id}/members/ - add member to team
     """
-    
+
 
     def get_permissions(self):
         """Return permission instances based on action and HTTP method."""
@@ -139,10 +147,14 @@ class TeamViewSet(ViewSet):
         self, 
         pk: int
     ) -> tuple[Team | None, Response | None]:
-        """Helper: returns (team, None) or (None, 404 Response)"""
+        """
+        Helper: returns (team, None) or (None, 404 Response)
+        """
+
         try:
             team = Team.objects.get(pk=pk)
             return team, None
+        
         except Team.DoesNotExist:
             logger.warning('Team not found: id=%s', pk)
             return None, Response(
@@ -150,14 +162,14 @@ class TeamViewSet(ViewSet):
                 status=HTTP_404_NOT_FOUND
             )
 
-    def list(
-        self, 
-        request: Request    
-    ) -> Response:
-        """GET api/teams/ — list all teams"""
+    def list(self, request: Request ) -> Response:
+        """
+        GET api/teams/ — list all teams
+        """
 
         conds = build_team_q(request)
-        queryset = Team.objects.filter(conds).order_by('id').distinct()
+
+        queryset = Team.objects.filter(conds).order_by('id')
 
         serializer = TeamSerializer(queryset, many=True)
 
@@ -175,15 +187,25 @@ class TeamViewSet(ViewSet):
     def retrieve(
         self, 
         request: Request, 
-        pk: int = None
+        pk: int | None = None
     ) -> Response:
-        """GET api/teams/{id}/ — retrieve one team"""
+        """
+        GET api/teams/{id}/ — retrieve one team
+        """
+
         team, error = self.get_team_or_404(pk)
-        if error:
+
+        if error is not None:
             return error
 
         serializer = TeamSerializer(team)
-        logger.info('Team retrieved: id=%s by user=%s', pk, request.user.id)
+
+        logger.debug(
+            'Team retrieved: id=%s by user=%s', 
+            pk, 
+            request.user.id
+        )
+
         return Response(
             {
                 'message': 'Team detail',
@@ -196,28 +218,36 @@ class TeamViewSet(ViewSet):
         self, 
         request: Request
     ) -> Response:
-        """POST api/teams/ — create a team"""
+        """
+        POST api/teams/ — create a team
+        """
+
         serializer = CreateTeamSerializer(
             data=request.data,
             context={'request': request}
         )
+
         if not serializer.is_valid():
+
             logger.warning(
                 'Team creation failed: user=%s errors=%s',
                 request.user.id,
                 serializer.errors
             )
+
             return Response(
                 {'error': serializer.errors},
                 status=HTTP_400_BAD_REQUEST,
             )
 
         team = serializer.save()
+
         logger.info(
             'Team created: id=%s by user=%s', 
             team.id, 
             request.user.id
         )
+
         return Response(
             {
                 'message': 'Team created successfully',
@@ -229,11 +259,15 @@ class TeamViewSet(ViewSet):
     def partial_update(
         self, 
         request: Request, 
-        pk: int = None
+        pk: int | None = None
     ) -> Response:
-        """PATCH api/teams/{id}/ — update team"""
+        """
+        PATCH api/teams/{id}/ — update team
+        """
+
         team, error = self.get_team_or_404(pk)
-        if error:
+
+        if error is not None:
             return error
 
         serializer = UpdateTeamSerializer(
@@ -242,23 +276,28 @@ class TeamViewSet(ViewSet):
             partial=True,
             context={'request': request}
         )
+
         if not serializer.is_valid():
+
             logger.warning(
                 'Team update failed: id=%s errors=%s',
                 pk,
                 serializer.errors
             )
+
             return Response(
                 {'error': serializer.errors},
                 status=HTTP_400_BAD_REQUEST,
             )
 
         team = serializer.save()
+
         logger.info(
             'Team updated: id=%s by user=%s', 
             team.id, 
             request.user.id
         )
+
         return Response(
             {
                 'message': 'Team updated successfully',
@@ -270,20 +309,26 @@ class TeamViewSet(ViewSet):
     def destroy(
         self, 
         request: Request, 
-        pk: int = None
+        pk: int | None = None
     ) -> Response:
-        """DELETE api/teams/{id}/ — delete team"""
+        """
+        DELETE api/teams/{id}/ — delete team
+        """
+
         team, error = self.get_team_or_404(pk)
-        if error:
+
+        if error is not None:
             return error
 
         team_id = team.id
         team.delete()
+
         logger.info(
             'Team deleted: id=%s by user=%s', 
             team_id, 
             request.user.id
         )
+
         return Response(
             {'message': 'Team deleted successfully'},
             status=HTTP_204_NO_CONTENT,
@@ -293,30 +338,39 @@ class TeamViewSet(ViewSet):
     @extend_schema(
         methods=['GET'],
         summary='List team members',
-        tags=['Team Members'],
+        tags=[TEAM_MEMBERS_TAG],
         responses={
             200: OpenApiResponse(
                 response=TeamMembershipSerializer(many=True),
                 description='Members list returned successfully',
             ),
-            404: OpenApiResponse(description='Team not found'),
+            404: OpenApiResponse(
+                description='Team not found'
+            ),
         },
     )
     @extend_schema(
         methods=['POST'],
         summary='Add a member to a team',
-        tags=['Team Members'],
+        tags=[TEAM_MEMBERS_TAG],
         request=CreateTeamMembershipSerializer,
         responses={
-            201: OpenApiResponse(response=TeamMembershipSerializer, description='Member added successfully'),
-            400: OpenApiResponse(description='Validation error'),
-            404: OpenApiResponse(description='Team not found'),
+            201: OpenApiResponse(
+                response=TeamMembershipSerializer, 
+                description='Member added successfully'
+            ),
+            400: OpenApiResponse(
+                description='Validation error'
+            ),
+            404: OpenApiResponse(
+                description='Team not found'
+            ),
         },
     )
     @extend_schema(
         methods=['DELETE'],
         summary='Remove a member from a team',
-        tags=['Team Members'],
+        tags=[TEAM_MEMBERS_TAG],
         request=OpenApiTypes.OBJECT,
         examples=[
             OpenApiExample(
@@ -326,15 +380,21 @@ class TeamViewSet(ViewSet):
             )
         ],
         responses={
-            204: OpenApiResponse(description='Member removed successfully'),
-            400: OpenApiResponse(description='user_id is required'),
-            404: OpenApiResponse(description='Team or member not found'),
+            204: OpenApiResponse(
+                description='Member removed successfully'
+            ),
+            400: OpenApiResponse(
+                description='user_id is required'
+            ),
+            404: OpenApiResponse(
+                description='Team or member not found'
+            ),
         },
     )
 
     @action(
         detail=True,
-        methods=['get','post'],
+        methods=['get'],
         url_path='assigment'
     )
     def assigments(
@@ -346,20 +406,39 @@ class TeamViewSet(ViewSet):
         Assigment by team and team_id
         """
         team,error = self.get_team_or_404(pk)
+
         if error:
             return error
 
         if request.method == 'GET':
             logger.info('list of assigments by team_id:%s',team)
             return self._list_assigments(request,team)
-        
-        if request.method == "POST":
-            logger.info('Create assigment by team and team_id: %s',team)
-            return self._create_assigments(request,team)
-        
-    def _list_assigments(
+    
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='assigment'
+    )
+    def create_assigment(
         self,
         request:Request,
+        pk:int = None
+    ) -> Response:
+        """
+        Create assigment by team and team_id
+        """
+        team,error = self.get_team_or_404(pk)
+
+        if error is not None:
+            return error
+
+        if request.method == 'POST':
+            logger.info('Create assigment by team_id:%s',team)
+            return self._create_assignment(request,team)
+
+
+    def _list_assigments(
+        self,
         team:int=None
     )->Response:
         """
@@ -393,29 +472,37 @@ class TeamViewSet(ViewSet):
         request: Request,
         team: Team
     ) -> Response:
-        """Create an assignment for a team."""
+        """
+        Create an assignment for a team.
+        """
+
         serializer = CreateAssigmentsSerializers(
             data=request.data,
             context={'request': request, 'team': team}
         )
+
         if not serializer.is_valid():
+
             logger.warning(
                 'Assignment creation failed: team_id=%s errors=%s',
                 team.id,
                 serializer.errors
             )
+
             return Response(
                 {'error': serializer.errors},
                 status=HTTP_400_BAD_REQUEST,
             )
 
         assignment = serializer.save(team=team)
+
         logger.info(
             'Assignment created: id=%s team_id=%s by user=%s',
             assignment.id,
             team.id,
             request.user.id
         )
+
         return Response(
             {
                 'message': 'Assignment created successfully',
@@ -426,7 +513,7 @@ class TeamViewSet(ViewSet):
     
     @action(
         detail=True, 
-        methods=['get', 'post','delete'], 
+        methods=['get'], 
         url_path='members'
     )
     def members(self, request: Request, pk: int = None) -> Response:
@@ -442,15 +529,60 @@ class TeamViewSet(ViewSet):
         if request.method == 'GET':
             logger.info('List of members: team=%s', team.id)
             return self._list_members(request, team)
+        
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='add-members'
+    )
+    def add_members(
+        self, 
+        request: Request, 
+        pk: int | None = None
+    ) -> Response:
+        """
+        Added member to team
+        """
 
-        if request.method == 'POST':
-            logger.info('Adding member: team=%s', team.id)
-            return self._add_members(request, team)
+        team, error = self.get_team_or_404(pk=pk)
 
-        if request.method == 'DELETE':
-            logger.info('Deleting member: team=%s', team.id)
-            return self._delete_members(request, team)
+        if error is not None:
+            return error
 
+        logger.info(
+            'Add member to team: team=%s by user=%s', 
+            team.id, 
+            request.user.id
+        )
+
+        return self._add_members(request, team)
+
+    @action(
+        detail=True,
+        methods=['delete'],
+        url_path='delete-members'
+    )
+    def delete_members(
+        self,
+        request: Request,
+        pk: int | None = None
+    ) -> Response:
+        """
+        Delete member from team
+        """
+
+        team, error = self.get_team_or_404(pk=pk)
+
+        if error is not None:
+            return error
+
+        logger.info(
+            'Delete member from team: team=%s by user=%s', 
+            team.id, 
+            request.user.id
+        )
+
+        return self._delete_members(request, team)
 
     def _list_members(
         self, 
@@ -472,6 +604,7 @@ class TeamViewSet(ViewSet):
             memberships, 
             many=True
         )
+
         logger.info(
             'Listed members: team=%s count=%s', 
             team.id, memberships.count()
@@ -492,27 +625,35 @@ class TeamViewSet(ViewSet):
         request: Request, 
         team: Team
     ) -> Response:
-        """Add member to team"""
+        """
+        Add member to team
+        """
+        
         data = {
             **request.data, 
             'team': team.id
-        } 
+        }
+
         serializer = CreateTeamMembershipSerializer(
             data=data,  
             context={'request': request}
         )
+
         if not serializer.is_valid():
+
             logger.warning(
                 'Add member failed: team=%s errors=%s',
                 team.id,
                 serializer.errors
             )
+
             return Response(
                 {'error': serializer.errors},
                 status=HTTP_400_BAD_REQUEST,
             )
 
         membership = serializer.save()
+
         logger.info(
             'Member added: team=%s membership=%s role=%s',
             team.id,
