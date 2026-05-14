@@ -43,6 +43,8 @@ from .serializers import (
     UpdateTeamSerializer,
 )
 from .tasks import send_team_invitation
+from apps.utils.decoratos import call_log_api
+from apps.utils.decoratos import require_team_member
 
 
 logger = logging.getLogger(__name__)
@@ -163,6 +165,7 @@ class TeamViewSet(ViewSet):
                 status=HTTP_404_NOT_FOUND
             )
 
+    @call_log_api
     def list(self, request: Request ) -> Response:
         """
         GET api/teams/ — list all teams
@@ -185,6 +188,7 @@ class TeamViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
+    @call_log_api
     def retrieve(
         self, 
         request: Request, 
@@ -215,6 +219,7 @@ class TeamViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
+    @call_log_api
     def create(
         self, 
         request: Request
@@ -257,6 +262,8 @@ class TeamViewSet(ViewSet):
             status=HTTP_201_CREATED,
         )
 
+    @call_log_api
+    @require_team_member("pk")
     def partial_update(
         self, 
         request: Request, 
@@ -307,6 +314,7 @@ class TeamViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
+    @call_log_api
     def destroy(
         self, 
         request: Request, 
@@ -438,6 +446,7 @@ class TeamViewSet(ViewSet):
             return self._create_assignment(request,team)
 
 
+    @call_log_api
     def _list_assigments(
         self,
         team:int=None
@@ -468,6 +477,7 @@ class TeamViewSet(ViewSet):
             status = HTTP_200_OK
         )
     
+    @call_log_api
     def _create_assignment(
         self,
         request: Request,
@@ -512,6 +522,7 @@ class TeamViewSet(ViewSet):
             status=HTTP_201_CREATED,
         )
     
+    @require_team_member("pk")
     @action(
         detail=True, 
         methods=['get'], 
@@ -558,6 +569,7 @@ class TeamViewSet(ViewSet):
 
         return self._add_members(request, team)
 
+    @require_team_member("pk")
     @action(
         detail=True,
         methods=['delete'],
@@ -585,6 +597,7 @@ class TeamViewSet(ViewSet):
 
         return self._delete_members(request, team)
 
+    @call_log_api
     def _list_members(
         self, 
         request: Request, 
@@ -620,7 +633,7 @@ class TeamViewSet(ViewSet):
             status=HTTP_200_OK,
         )
 
-
+    @call_log_api
     def _add_members(
         self, 
         request: Request, 
