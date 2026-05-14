@@ -2,15 +2,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuthStore } from "../store/authStore";
+import { useLang } from "../i18n/LangContext";
+import LangSwitcher from "../components/LangSwitcher";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setTokens = useAuthStore((s) => s.setTokens);
+  const { tr } = useLang();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -24,7 +27,7 @@ export default function LoginPage() {
       setError(
         axiosErr.response?.data?.errors ??
         axiosErr.response?.data?.detail ??
-        "Invalid email or password"
+        tr("invalidCredentials")
       );
     } finally {
       setLoading(false);
@@ -41,7 +44,10 @@ export default function LoginPage() {
             </div>
             <span className="text-xl font-semibold text-white">Teams</span>
           </div>
-          <p className="text-gray-400 text-sm">Sign in to your account</p>
+          <p className="text-gray-400 text-sm">{tr("signInDesc")}</p>
+          <div className="flex justify-center mt-3">
+            <LangSwitcher />
+          </div>
         </div>
 
         <div className="bg-[#292828] rounded-xl p-8 shadow-2xl">
@@ -53,7 +59,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Email</label>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("email")}</label>
               <input
                 type="email"
                 required
@@ -65,7 +71,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Password</label>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("password")}</label>
               <input
                 type="password"
                 required
@@ -81,14 +87,14 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-[#6264A7] hover:bg-[#7274B7] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium text-sm transition-colors mt-2"
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? tr("signingIn") : tr("signIn")}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-400 mt-6">
-            Don't have an account?{" "}
+            {tr("noAccount")}{" "}
             <Link to="/register" className="text-[#8B8CC7] hover:text-[#6264A7] transition-colors">
-              Create one
+              {tr("createOne")}
             </Link>
           </p>
         </div>
