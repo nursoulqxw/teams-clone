@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import timedelta
 from settings.conf import *
 from celery.schedules import crontab
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,6 +47,7 @@ CHANNEL_LAYERS = {
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -164,10 +166,21 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ── Internationalisation ───────────────────────────────────────────────────────
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"  
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+
+# Добавляем поддерживаемые языки
+LANGUAGES = (
+    ('en', _('English')),
+    ('ru', _('Russian')),
+)
+
+# Указываем, где будут лежать файлы переводов
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 # ── Static & Media ─────────────────────────────────────────────────────────────
 STATIC_URL = "/static/"

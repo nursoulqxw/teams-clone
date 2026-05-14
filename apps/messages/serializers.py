@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     CharField,
     PrimaryKeyRelatedField,
 )
+from django.utils.translation import gettext_lazy as _
 
 # Project imports
 from .models import Message
@@ -74,7 +75,7 @@ class CreateMessageSerializer(ModelSerializer):
 
         # 1) Auth check
         if not user or not user.is_authenticated:
-            raise ValidationError("Authentication error")
+            raise ValidationError(_("Authentication error"))
 
         # 2) Permission check (user must be in team)
         if not channel.team.members.filter(id=user.id).exists():
@@ -84,7 +85,7 @@ class CreateMessageSerializer(ModelSerializer):
                 channel.id,
                 channel.team_id,
             )
-            raise ValidationError("You have no access to this channel.")
+            raise ValidationError(_("You have no access to this channel."))
 
         # 3) Thread check (parent must be in same channel)
         if parent_message and parent_message.channel_id != channel.id:
@@ -96,7 +97,7 @@ class CreateMessageSerializer(ModelSerializer):
                 parent_message.channel_id,
             )
             raise ValidationError(
-                {"parent_message": "Parent message must be in the same channel."}
+                {"parent_message": _("Parent message must be in the same channel.")}
             )
 
         return attrs
@@ -133,7 +134,7 @@ class UpdateMessageSerializer(ModelSerializer):
         user = request.user if request else None
 
         if not user or not user.is_authenticated:
-            raise ValidationError("Authentication required.")
+            raise ValidationError(_("Authentication required."))
 
         # 
         if self.instance.author_id != user.id:
@@ -141,7 +142,7 @@ class UpdateMessageSerializer(ModelSerializer):
                 "Message update denied (not author): msg=%s user=%s author=%s",
                 self.instance.id, user.id, self.instance.author_id
             )
-            raise ValidationError("Only the author can edit this message.")
+            raise ValidationError(_("Only the author can edit this message."))
 
         return attrs
 

@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     CharField,
     IntegerField
 )
+from django.utils.translation import gettext_lazy as _
 
 # Project modules
 from .models import Team, TeamMembership
@@ -92,7 +93,7 @@ class CreateTeamSerializer(ModelSerializer):
         if Team.objects.filter(name__iexact=value).exists():
             logger.warning('Team creation failed - name already exists: %s', value)
 
-            raise ValidationError("Team with this name already exists.")
+            raise ValidationError(_("Team with this name already exists.")) 
         
         return value
 
@@ -142,7 +143,7 @@ class UpdateTeamSerializer(ModelSerializer):
         qs = Team.objects.filter(name__iexact=value).exclude(pk=self.instance.pk)
         if qs.exists():
             logger.warning('Team update failed - name already exists: %s', value)
-            raise ValidationError("Team with this name already exists.")
+            raise ValidationError(_("Team with this name already exists."))
         return value
 
     def update(
@@ -215,7 +216,7 @@ class CreateTeamMembershipSerializer(ModelSerializer):
                 user.id, team.id
             )
             raise ValidationError({
-                'error': "User is already a member of this team."
+                'error': _("User is already a member of this team.")
             })
 
         return attrs
