@@ -3,11 +3,19 @@ import { type Lang } from "../i18n/translations";
 
 const LANGS: Lang[] = ["en", "ru", "kz"];
 
-export default function LangSwitcher() {
+interface Props {
+  direction?: "vertical" | "horizontal";
+}
+
+export default function LangSwitcher({ direction = "vertical" }: Props) {
   const { lang, setLang } = useLang();
 
   return (
-    <div className="flex gap-0.5 bg-[#3a3939] rounded-lg p-0.5">
+    <div
+      className={`flex gap-0.5 bg-[#3a3939] rounded-lg p-0.5 ${
+        direction === "vertical" ? "flex-col" : "flex-row"
+      }`}
+    >
       {LANGS.map((l) => (
         <button
           key={l}
