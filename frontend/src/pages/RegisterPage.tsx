@@ -8,38 +8,60 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { tr } = useLang();
   const [form, setForm] = useState({
-    username: "",
     email: "",
     password: "",
+    password2: "",
     first_name: "",
     last_name: "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
   const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
+
+    if (form.password !== form.password2) {
+      setErrors({ password2: tr("passwordMismatch") });
+      return;
+    }
+
     setLoading(true);
     try {
-      await register(form);
+      await register({
+        email: form.email,
+        password: form.password,
+        password2: form.password2,
+        first_name: form.first_name,
+        last_name: form.last_name,
+      });
       navigate("/login");
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: Record<string, unknown> } };
+      const axiosErr = err as { response?: { data?: Record<string, string | string[]> } };
       const data = axiosErr.response?.data;
-      if (data) {
-        const msg = Object.values(data).flat().join(" ");
-        setError(msg || tr("registrationFailed"));
+      if (data && typeof data === "object") {
+        const mapped: Record<string, string> = {};
+        for (const [k, v] of Object.entries(data)) {
+          mapped[k] = Array.isArray(v) ? v.join(" ") : String(v);
+        }
+        setErrors(mapped);
       } else {
-        setError(tr("registrationFailed"));
+        setErrors({ non_field_errors: tr("registrationFailed") });
       }
     } finally {
       setLoading(false);
     }
   };
+
+  const fieldError = (f: string) =>
+    errors[f] ? (
+      <p className="text-red-400 text-xs mt-1">{errors[f]}</p>
+    ) : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#201f1f]">
@@ -58,9 +80,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-[#292828] rounded-xl p-8 shadow-2xl">
-          {error && (
+          {errors.non_field_errors && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-              {error}
+              {errors.non_field_errors}
             </div>
           )}
 
@@ -75,6 +97,7 @@ export default function RegisterPage() {
                   className="w-full bg-[#3d3c3c] border border-[#505050] rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#6264A7] transition-colors text-sm"
                   placeholder="John"
                 />
+                {fieldError("first_name")}
               </div>
               <div>
                 <label className="block text-sm text-gray-300 mb-1.5">{tr("lastName")}</label>
@@ -85,19 +108,8 @@ export default function RegisterPage() {
                   className="w-full bg-[#3d3c3c] border border-[#505050] rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#6264A7] transition-colors text-sm"
                   placeholder="Doe"
                 />
+                {fieldError("last_name")}
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-300 mb-1.5">{tr("username")}</label>
-              <input
-                type="text"
-                required
-                value={form.username}
-                onChange={set("username")}
-                className="w-full bg-[#3d3c3c] border border-[#505050] rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#6264A7] transition-colors text-sm"
-                placeholder="johndoe"
-              />
             </div>
 
             <div>
@@ -110,6 +122,7 @@ export default function RegisterPage() {
                 className="w-full bg-[#3d3c3c] border border-[#505050] rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#6264A7] transition-colors text-sm"
                 placeholder="name@company.com"
               />
+              {fieldError("email")}
             </div>
 
             <div>
@@ -122,6 +135,22 @@ export default function RegisterPage() {
                 className="w-full bg-[#3d3c3c] border border-[#505050] rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#6264A7] transition-colors text-sm"
                 placeholder="••••••••"
               />
+              {fieldError("password")}
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("confirmPassword")}</label>
+              <input
+                type="password"
+                required
+                value={form.password2}
+                onChange={set("password2")}
+                className={`w-full bg-[#3d3c3c] border rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none transition-colors text-sm ${
+                  errors.password2 ? "border-red-500/60 focus:border-red-500" : "border-[#505050] focus:border-[#6264A7]"
+                }`}
+                placeholder="••••••••"
+              />
+              {fieldError("password2")}
             </div>
 
             <button

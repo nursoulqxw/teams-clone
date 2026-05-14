@@ -5,9 +5,9 @@ export const login = (email: string, password: string) =>
   api.post<{ data: TokenPair }>("/users/login/", { email, password });
 
 export const register = (data: {
-  username: string;
   email: string;
   password: string;
+  password2: string;
   first_name?: string;
   last_name?: string;
 }) => api.post("/users/register/", data);
