@@ -28,12 +28,25 @@ export default function ChannelList() {
     enabled: !!activeTeam,
   });
 
+  const [createError, setCreateError] = useState("");
+
   const createMutation = useMutation({
     mutationFn: (name: string) => createChannel({ name, team: activeTeam!.id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["channels", activeTeam?.id] });
       setShowCreate(false);
       setNewName("");
+      setCreateError("");
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { error?: Record<string, string[]> | string } } };
+      const d = e.response?.data?.error;
+      if (typeof d === "string") setCreateError(d);
+      else if (d && typeof d === "object") {
+        setCreateError(Object.values(d).flat().join(" "));
+      } else {
+        setCreateError("Failed to create channel");
+      }
     },
   });
 
@@ -85,11 +98,11 @@ export default function ChannelList() {
               ))}
 
               {showCreate ? (
-                <div className="px-2 py-1">
+                <div className="px-2 py-1 space-y-1">
                   <input
                     autoFocus
                     value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
+                    onChange={(e) => { setNewName(e.target.value); setCreateError(""); }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && newName.trim()) {
                         createMutation.mutate(newName.trim());
@@ -101,6 +114,9 @@ export default function ChannelList() {
                     className="w-full bg-[#3a3939] text-white text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#6264A7]"
                     placeholder="channel-name"
                   />
+                  {createError && (
+                    <p className="text-red-400 text-xs px-1">{createError}</p>
+                  )}
                 </div>
               ) : (
                 <button

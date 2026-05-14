@@ -7,15 +7,17 @@ import RegisterPage from "./pages/RegisterPage";
 import MainLayout from "./pages/MainLayout";
 import AssignmentsPage from "./pages/AssignmentsPage";
 import ProfilePage from "./pages/ProfilePage";
+import TeamsSidebar from "./components/TeamsSidebar";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-function AppShell({ children }: { children: React.ReactNode }) {
+function SidebarLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
+      <TeamsSidebar />
       {children}
     </div>
   );
@@ -49,9 +51,9 @@ export default function App() {
         path="/assignments"
         element={
           <PrivateRoute>
-            <AppShell>
+            <SidebarLayout>
               <AssignmentsPage />
-            </AppShell>
+            </SidebarLayout>
           </PrivateRoute>
         }
       />
@@ -59,9 +61,9 @@ export default function App() {
         path="/profile"
         element={
           <PrivateRoute>
-            <AppShell>
+            <SidebarLayout>
               <ProfilePage />
-            </AppShell>
+            </SidebarLayout>
           </PrivateRoute>
         }
       />
