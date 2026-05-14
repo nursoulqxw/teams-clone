@@ -46,7 +46,7 @@ export default function LoginPage() {
           </div>
           <p className="text-gray-400 text-sm">{tr("signInDesc")}</p>
           <div className="flex justify-center mt-3">
-            <LangSwitcher />
+            <LangSwitcher direction="horizontal" />
           </div>
         </div>
 

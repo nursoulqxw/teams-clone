@@ -75,7 +75,7 @@ export default function RegisterPage() {
           </div>
           <p className="text-gray-400 text-sm">{tr("createAccountDesc")}</p>
           <div className="flex justify-center mt-3">
-            <LangSwitcher />
+            <LangSwitcher direction="horizontal" />
           </div>
         </div>
 
