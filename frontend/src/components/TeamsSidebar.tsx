@@ -6,6 +6,8 @@ import { getTeams, createTeam, addTeamMember } from "../api/teams";
 import { logout } from "../api/auth";
 import { useAuthStore } from "../store/authStore";
 import { useAppStore } from "../store/appStore";
+import { useLang } from "../i18n/LangContext";
+import LangSwitcher from "./LangSwitcher";
 import type { Team } from "../types";
 
 export default function TeamsSidebar() {
@@ -58,6 +60,7 @@ export default function TeamsSidebar() {
     navigate("/login");
   };
 
+  const { tr } = useLang();
   const teams: Team[] = data ?? [];
 
   return (
@@ -66,7 +69,7 @@ export default function TeamsSidebar() {
       <button
         onClick={() => navigate("/")}
         className="w-10 h-10 bg-[#6264A7] hover:bg-[#7274B7] rounded-xl flex items-center justify-center mb-3 flex-shrink-0 transition-colors"
-        title="Go to chat"
+        title={tr("goToChat")}
       >
         <span className="text-white font-bold text-lg">T</span>
       </button>
@@ -120,9 +123,13 @@ export default function TeamsSidebar() {
 
       {/* Bottom actions */}
       <div className="flex flex-col gap-1 items-center pb-1">
+        {/* Language switcher */}
+        <div className="mb-1">
+          <LangSwitcher />
+        </div>
         <button
           onClick={() => navigate("/assignments")}
-          title="Assignments"
+          title={tr("assignments")}
           className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             location.pathname === "/assignments"
               ? "bg-[#6264A7] text-white"
@@ -133,7 +140,7 @@ export default function TeamsSidebar() {
         </button>
         <button
           onClick={() => navigate("/profile")}
-          title={user?.username ?? "Profile"}
+          title={tr("profile")}
           className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             location.pathname === "/profile"
               ? "bg-[#6264A7] text-white"
@@ -144,7 +151,7 @@ export default function TeamsSidebar() {
         </button>
         <button
           onClick={handleLogout}
-          title="Sign out"
+          title={tr("signOut")}
           className="w-10 h-10 rounded-xl text-gray-400 hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-all"
         >
           <LogOut size={20} />
