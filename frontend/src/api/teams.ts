@@ -18,7 +18,10 @@ export const getTeamMembers = (teamId: number) =>
   api.get<{ data: TeamMember[] }>(`/teams/${teamId}/members/`);
 
 export const addTeamMember = (teamId: number, userId: number) =>
-  api.post(`/teams/${teamId}/add-members/`, { user_id: userId });
+  api.post(`/teams/${teamId}/add-members/`, { user: userId, team: teamId });
+
+export const searchUsers = (query: string) =>
+  api.get<{ results?: unknown[]; data?: unknown[] }>(`/users/?search=${encodeURIComponent(query)}`);
 
 export const removeTeamMember = (teamId: number, userId: number) =>
   api.delete(`/teams/${teamId}/members/${userId}/`);
