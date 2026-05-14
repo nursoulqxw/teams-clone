@@ -1,5 +1,5 @@
 import { useLang } from "../i18n/LangContext";
-import { LANG_LABELS, type Lang } from "../i18n/translations";
+import { type Lang } from "../i18n/translations";
 
 const LANGS: Lang[] = ["en", "ru", "kz"];
 

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/auth";
+import { useLang } from "../i18n/LangContext";
+import LangSwitcher from "../components/LangSwitcher";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { tr } = useLang();
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -17,7 +20,7 @@ export default function RegisterPage() {
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -29,9 +32,9 @@ export default function RegisterPage() {
       const data = axiosErr.response?.data;
       if (data) {
         const msg = Object.values(data).flat().join(" ");
-        setError(msg || "Registration failed");
+        setError(msg || tr("registrationFailed"));
       } else {
-        setError("Registration failed");
+        setError(tr("registrationFailed"));
       }
     } finally {
       setLoading(false);
@@ -48,7 +51,10 @@ export default function RegisterPage() {
             </div>
             <span className="text-xl font-semibold text-white">Teams</span>
           </div>
-          <p className="text-gray-400 text-sm">Create your account</p>
+          <p className="text-gray-400 text-sm">{tr("createAccountDesc")}</p>
+          <div className="flex justify-center mt-3">
+            <LangSwitcher />
+          </div>
         </div>
 
         <div className="bg-[#292828] rounded-xl p-8 shadow-2xl">
@@ -61,7 +67,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-gray-300 mb-1.5">First name</label>
+                <label className="block text-sm text-gray-300 mb-1.5">{tr("firstName")}</label>
                 <input
                   type="text"
                   value={form.first_name}
@@ -71,7 +77,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-300 mb-1.5">Last name</label>
+                <label className="block text-sm text-gray-300 mb-1.5">{tr("lastName")}</label>
                 <input
                   type="text"
                   value={form.last_name}
@@ -83,7 +89,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Username</label>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("username")}</label>
               <input
                 type="text"
                 required
@@ -95,7 +101,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Email</label>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("email")}</label>
               <input
                 type="email"
                 required
@@ -107,7 +113,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1.5">Password</label>
+              <label className="block text-sm text-gray-300 mb-1.5">{tr("password")}</label>
               <input
                 type="password"
                 required
@@ -123,14 +129,14 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full bg-[#6264A7] hover:bg-[#7274B7] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium text-sm transition-colors mt-1"
             >
-              {loading ? "Creating account…" : "Create account"}
+              {loading ? tr("creatingAccount") : tr("createAccount")}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-400 mt-6">
-            Already have an account?{" "}
+            {tr("alreadyHaveAccount")}{" "}
             <Link to="/login" className="text-[#8B8CC7] hover:text-[#6264A7] transition-colors">
-              Sign in
+              {tr("signIn")}
             </Link>
           </p>
         </div>
