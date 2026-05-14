@@ -14,6 +14,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND
 )
 
+#project imports
+from apps.teams.models import Team
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,8 +71,6 @@ def require_team_member(team_lookup: str = "pk"):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(view_instance, request, *args, **kwargs):
-
-            from apps.teams.models import Team
 
             team_id = kwargs.get(team_lookup)
 

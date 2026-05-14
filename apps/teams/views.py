@@ -45,6 +45,10 @@ from .serializers import (
 from .tasks import send_team_invitation
 from apps.utils.decoratos import call_log_api
 from apps.utils.decoratos import require_team_member
+from apps.utils.mixins import (
+    TeamAccessMixin,
+    LoggingMixin
+)
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +119,7 @@ TEAM_MEMBERS_TAG = 'Team Members'
 )
 
 
-class TeamViewSet(ViewSet):
+class TeamViewSet(ViewSet, TeamAccessMixin,LoggingMixin):
     """
     Team endpoints:
         GET    api/teams/              - list all teams
