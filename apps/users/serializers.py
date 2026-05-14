@@ -13,6 +13,7 @@ from rest_framework.serializers import (
     
 )
 from django.contrib.auth import authenticate
+from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.models import CustomUser
 from rest_framework import serializers
@@ -74,7 +75,7 @@ class RegisterSerializer(ModelSerializer):
 
         if attrs["password"] != attrs["password2"]:
             logger.warning(f"Password mismatch for email: {email}")
-            raise ValidationError("Passwords do not match")
+            raise ValidationError(_("Passwords do not match"))
         logger.debug(f"Registration data validated for email: {email}")
         return attrs
     def create(self, validated_data: dict[str, Any]) -> CustomUser:
@@ -114,7 +115,7 @@ class LoginSerializer(Serializer):
         
         if not user or not user.is_active:
             logger.warning(f"Login failed for email: {email}")
-            raise ValidationError("Invalid credentials or inactive account")
+            raise ValidationError(_("Invalid credentials or inactive account"))
         logger.info(f"Login successful for email: {email}")
         refresh = RefreshToken.for_user(user)
         logger.debug(f"Generated tokens for email: {email}")

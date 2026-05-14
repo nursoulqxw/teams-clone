@@ -1,0 +1,434 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14 11:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: apps/assigments/models.py:30
+msgid "Title"
+msgstr "Название"
+
+#: apps/assigments/models.py:35
+msgid "Points"
+msgstr "Баллы"
+
+#: apps/assigments/models.py:38
+msgid "Assignment"
+msgstr "Задание"
+
+#: apps/assigments/models.py:39
+msgid "Assignments"
+msgstr "Задания"
+
+#: apps/assigments/models.py:51
+msgid "Upcoming"
+msgstr "Предстоящие"
+
+#: apps/assigments/models.py:52
+msgid "Overdue"
+msgstr "Просроченные"
+
+#: apps/assigments/models.py:53
+msgid "Completed"
+msgstr "Завершенные"
+
+#: apps/assigments/models.py:54
+msgid "Completed Late"
+msgstr "Завершенные с опозданием"
+
+#: apps/assigments/models.py:89
+msgid "Assignment Submission"
+msgstr "Сдача задания"
+
+#: apps/assigments/models.py:90
+msgid "Assignment Submissions"
+msgstr "Сданные задания"
+
+#: apps/assigments/views.py:116
+msgid "Assignment not found."
+msgstr "Задание не найдено."
+
+#: apps/assigments/views.py:144
+msgid "List of Assignments"
+msgstr "Список заданий"
+
+#: apps/assigments/views.py:173
+msgid "Assignments by team ID"
+msgstr "Задания по ID команды"
+
+#: apps/assigments/views.py:185
+msgid "Invalid team ID"
+msgstr "Неверный ID команды"
+
+#: apps/assigments/views.py:219
+msgid "Updated assignments"
+msgstr "Обновленные задания"
+
+#: apps/assigments/views.py:259
+msgid "Created assignment"
+msgstr "Созданное задание"
+
+#: apps/assigments/views.py:361
+msgid "Assignment submitted successfully"
+msgstr "Задание успешно сдано"
+
+#: apps/assigments/views.py:404
+msgid "Submission not found"
+msgstr "Отправленная работа не найдена"
+
+#: apps/assigments/views.py:420
+msgid "Student graded successfully"
+msgstr "Оценка успешно выставлена"
+
+#: apps/channels/models.py:32
+msgid "Channel name (e.g., 'general', 'random')"
+msgstr "Имя канала (например, 'general', 'random')"
+
+#: apps/channels/models.py:38
+msgid "Channel description"
+msgstr "Описание канала"
+
+#: apps/channels/models.py:45
+msgid "Parent team"
+msgstr "Родительская команда"
+
+#: apps/channels/models.py:50
+msgid "IF True, only selected members can access this channel"
+msgstr "Если True, только выбранные участники имеют доступ к этому каналу"
+
+#: apps/channels/models.py:58
+msgid "Members with access (for private channels only)"
+msgstr "Участники с доступом (только для приватных каналов)"
+
+#: apps/channels/models.py:69
+msgid "Channel"
+msgstr "Канал"
+
+#: apps/channels/models.py:70
+msgid "Channels"
+msgstr "Каналы"
+
+#: apps/channels/models.py:113
+msgid "Channel Membership"
+msgstr "Членство в канале"
+
+#: apps/channels/models.py:114
+msgid "Channel Memberships"
+msgstr "Членства в каналах"
+
+#: apps/channels/serializers.py:124 apps/channels/serializers.py:197
+#, python-format
+msgid "Channel '%(name)s' already exists in this team."
+msgstr "Канал '%(name)s' уже существует в этой команде."
+
+#: apps/channels/serializers.py:132
+msgid "You must be a team member to create channels"
+msgstr "Вы должны быть участником команды, чтобы создавать каналы"
+
+#: apps/channels/serializers.py:264
+msgid "Can only add members to private channels."
+msgstr "Добавлять участников можно только в приватные каналы."
+
+#: apps/channels/serializers.py:275
+msgid "User is already a member of this channel"
+msgstr "Пользователь уже является участником этого канала"
+
+#: apps/channels/serializers.py:281
+msgid "User must be a team member to join this channel."
+msgstr "Пользователь должен быть участником команды, чтобы присоединиться к этому каналу."
+
+#: apps/channels/views.py:78
+msgid "Channel not found."
+msgstr "Канал не найден."
+
+#: apps/channels/views.py:92
+msgid "team_id query parameter is required."
+msgstr "Параметр запроса team_id обязателен."
+
+#: apps/channels/views.py:100
+msgid "team_id must be a valid integer."
+msgstr "team_id должен быть допустимым целым числом."
+
+#: apps/channels/views.py:130
+msgid "List of channels"
+msgstr "Список каналов"
+
+#: apps/channels/views.py:166 apps/channels/views.py:184
+msgid "Channel detail"
+msgstr "Детали канала"
+
+#: apps/channels/views.py:226
+msgid "Channel created successfully"
+msgstr "Канал успешно создан"
+
+#: apps/channels/views.py:273
+msgid "Channel updated successfully"
+msgstr "Канал успешно обновлен"
+
+#: apps/channels/views.py:306
+msgid "Channel deleted successfully"
+msgstr "Канал успешно удален"
+
+#: apps/channels/views.py:330
+msgid "This endpoint is only for private channels."
+msgstr "Этот эндпоинт предназначен только для приватных каналов."
+
+#: apps/channels/views.py:357
+msgid "List of channel members"
+msgstr "Список участников канала"
+
+#: apps/channels/views.py:402 apps/teams/views.py:686
+msgid "Member added successfully"
+msgstr "Участник успешно добавлен"
+
+#: apps/channels/views.py:414
+msgid "user_id is required."
+msgstr "user_id обязателен."
+
+#: apps/channels/views.py:425
+msgid "User is not a member of this channel."
+msgstr "Пользователь не является участником этого канала."
+
+#: apps/channels/views.py:442
+msgid "Member removed successfully"
+msgstr "Участник успешно удален"
+
+#: apps/messages/models.py:21
+msgid "content"
+msgstr "содержимое"
+
+#: apps/messages/models.py:28
+msgid "author"
+msgstr "автор"
+
+#: apps/messages/models.py:34
+msgid "channel"
+msgstr "канал"
+
+#: apps/messages/models.py:43
+msgid "parent message"
+msgstr "родительское сообщение"
+
+#: apps/messages/models.py:48
+msgid "created at"
+msgstr "дата создания"
+
+#: apps/messages/models.py:52
+msgid "updated at"
+msgstr "дата обновления"
+
+#: apps/messages/models.py:56
+msgid "Message"
+msgstr "Сообщение"
+
+#: apps/messages/models.py:57
+msgid "Messages"
+msgstr "Сообщения"
+
+#: apps/messages/serializers.py:78
+msgid "Authentication error"
+msgstr "Ошибка аутентификации"
+
+#: apps/messages/serializers.py:88 apps/messages/views.py:138
+#: apps/messages/views.py:216 apps/messages/views.py:272
+msgid "You have no access to this channel."
+msgstr "У вас нет доступа к этому каналу."
+
+#: apps/messages/serializers.py:100
+msgid "Parent message must be in the same channel."
+msgstr "Родительское сообщение должно быть в том же канале."
+
+#: apps/messages/serializers.py:137
+msgid "Authentication required."
+msgstr "Требуется аутентификация."
+
+#: apps/messages/serializers.py:145
+msgid "Only the author can edit this message."
+msgstr "Только автор может редактировать это сообщение."
+
+#: apps/messages/views.py:61
+msgid "Message not found"
+msgstr "Сообщение не найдено"
+
+#: apps/messages/views.py:109
+msgid "List of messages"
+msgstr "Список сообщений"
+
+#: apps/messages/views.py:147
+msgid "Message detail"
+msgstr "Детали сообщения"
+
+#: apps/messages/views.py:186
+msgid "Message created successfully"
+msgstr "Сообщение успешно создано"
+
+#: apps/messages/views.py:242
+msgid "Message updated successfully"
+msgstr "Сообщение успешно обновлено"
+
+#: apps/messages/views.py:283
+msgid "Only the author can delete this message."
+msgstr "Только автор может удалить это сообщение."
+
+#: apps/messages/views.py:293
+msgid "Message deleted successfully"
+msgstr "Сообщение успешно удалено"
+
+#: apps/teams/models.py:60
+msgid "Team"
+msgstr "Команда"
+
+#: apps/teams/models.py:61
+msgid "Teams"
+msgstr "Команды"
+
+#: apps/teams/models.py:92
+msgid "Admin"
+msgstr "Администратор"
+
+#: apps/teams/models.py:93
+msgid "Member"
+msgstr "Участник"
+
+#: apps/teams/models.py:102
+msgid "Team Membership"
+msgstr "Членство в команде"
+
+#: apps/teams/models.py:103
+msgid "Team Memberships"
+msgstr "Членства в командах"
+
+#: apps/teams/serializers.py:96 apps/teams/serializers.py:146
+msgid "Team with this name already exists."
+msgstr "Команда с таким именем уже существует."
+
+#: apps/teams/serializers.py:219
+msgid "User is already a member of this team."
+msgstr "Пользователь уже является участником этой команды."
+
+#: apps/teams/views.py:162
+msgid "Team not found."
+msgstr "Команда не найдена."
+
+#: apps/teams/views.py:181
+msgid "List of teams"
+msgstr "Список команд"
+
+#: apps/teams/views.py:212
+msgid "Team detail"
+msgstr "Детали команды"
+
+#: apps/teams/views.py:254
+msgid "Team created successfully"
+msgstr "Команда успешно создана"
+
+#: apps/teams/views.py:304
+msgid "Team updated successfully"
+msgstr "Команда успешно обновлена"
+
+#: apps/teams/views.py:334
+msgid "Team deleted successfully"
+msgstr "Команда успешно удалена"
+
+#: apps/teams/views.py:465
+msgid "Assignments by team_id"
+msgstr "Задания по team_id"
+
+#: apps/teams/views.py:509
+msgid "Assignment created successfully"
+msgstr "Задание успешно создано"
+
+#: apps/teams/views.py:616
+msgid "List of members"
+msgstr "Список участников"
+
+#: apps/teams/views.py:703
+msgid "user_id is required"
+msgstr "user_id обязателен"
+
+#: apps/teams/views.py:713
+msgid "Member not found in this team"
+msgstr "Участник не найден в этой команде"
+
+#: apps/teams/views.py:720
+msgid "Member deleted successfully"
+msgstr "Участник успешно удален"
+
+#: apps/users/models.py:16
+msgid "email address"
+msgstr "адрес электронной почты"
+
+#: apps/users/models.py:22
+msgid "first name"
+msgstr "имя"
+
+#: apps/users/models.py:28
+msgid "last name"
+msgstr "фамилия"
+
+#: apps/users/models.py:34
+msgid "active"
+msgstr "активен"
+
+#: apps/users/models.py:39
+msgid "staff status"
+msgstr "статус персонала"
+
+#: apps/users/models.py:44
+msgid "date joined"
+msgstr "дата регистрации"
+
+#: apps/users/models.py:49
+msgid "last login"
+msgstr "последний вход"
+
+#: apps/users/models.py:64
+msgid "User"
+msgstr "Пользователь"
+
+#: apps/users/models.py:65
+msgid "Users"
+msgstr "Пользователи"
+
+#: apps/users/serializers.py:78
+msgid "Passwords do not match"
+msgstr "Пароли не совпадают"
+
+#: apps/users/serializers.py:118
+msgid "Invalid credentials or inactive account"
+msgstr "Неверные учетные данные или аккаунт неактивен"
+
+#: apps/users/views.py:171
+msgid "User registered successfully"
+msgstr "Пользователь успешно зарегистрирован"
+
+#: apps/users/views.py:264
+msgid "Logout successful"
+msgstr "Выход успешно выполнен"
+
+#: apps/users/views.py:267
+msgid "Invalid token"
+msgstr "Неверный токен"
+
+#: settings/base.py:176
+msgid "English"
+msgstr "Английский"
+
+#: settings/base.py:177
+msgid "Russian"
+msgstr "Русский"

@@ -14,6 +14,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 from rest_framework.viewsets import ViewSet
+from django.utils.translation import gettext_lazy as _
 
 # drf-spectacular
 from drf_spectacular.types import OpenApiTypes
@@ -158,7 +159,7 @@ class TeamViewSet(ViewSet):
         except Team.DoesNotExist:
             logger.warning('Team not found: id=%s', pk)
             return None, Response(
-                {'error': 'Team not found.'},
+                {'error': _('Team not found.')},
                 status=HTTP_404_NOT_FOUND
             )
 
@@ -177,7 +178,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'List of teams',
+                'message': _('List of teams'),
                 'count': queryset.count(),
                 'data': serializer.data,
             },
@@ -208,7 +209,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'Team detail',
+                'message': _('Team detail'),
                 'data': serializer.data,
             },
             status=HTTP_200_OK,
@@ -250,7 +251,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'Team created successfully',
+                'message': _('Team created successfully'),
                 'data': TeamSerializer(team).data,  # возвращаем полный read serializer
             },
             status=HTTP_201_CREATED,
@@ -300,7 +301,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'Team updated successfully',
+                'message': _('Team updated successfully'),
                 'data': TeamSerializer(team).data,
             },
             status=HTTP_200_OK,
@@ -330,7 +331,7 @@ class TeamViewSet(ViewSet):
         )
 
         return Response(
-            {'message': 'Team deleted successfully'},
+            {'message': _('Team deleted successfully')},
             status=HTTP_204_NO_CONTENT,
         )
 
@@ -461,7 +462,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'meassage':"Assigments by team_id",
+                'message': _("Assignments by team_id"),
                 'data':serializer.data
             },
             status = HTTP_200_OK
@@ -505,7 +506,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'Assignment created successfully',
+                'message': _('Assignment created successfully'),
                 'data': AssigmentsSerialzers(assignment).data,
             },
             status=HTTP_201_CREATED,
@@ -612,7 +613,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'List of members',
+                'message': _('List of members'),
                 'count': memberships.count(),
                 'data': serializer.data,
             },
@@ -682,7 +683,7 @@ class TeamViewSet(ViewSet):
 
         return Response(
             {
-                'message': 'Member added successfully',
+                'message': _('Member added successfully'),
                 'data': TeamMembershipSerializer(membership).data,
             },
             status=HTTP_201_CREATED,
@@ -699,7 +700,7 @@ class TeamViewSet(ViewSet):
 
         if not user_id:
             return Response(
-                {'error': 'user_id is required'},
+                {'error': _('user_id is required')},
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -709,13 +710,13 @@ class TeamViewSet(ViewSet):
 
         if not membership:
             return Response(
-                {'error': 'Member not found in this team'},
+                {'error': _('Member not found in this team')},
                 status=HTTP_404_NOT_FOUND,
             )
 
         membership.delete()
         logger.info('Member deleted: team=%s user=%s', team.id, user_id)
         return Response(
-            {'message': 'Member deleted successfully'},
+            {'message': _('Member deleted successfully')},
             status=HTTP_204_NO_CONTENT,
         )
