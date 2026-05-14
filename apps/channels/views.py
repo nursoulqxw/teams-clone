@@ -15,6 +15,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import gettext_lazy as _
 
 # Project modules
 from .serializers import (
@@ -74,7 +75,7 @@ class ChannelViewSet(ViewSet):
         except Channel.DoesNotExist:
             logger.warning('Channel not found: id=%s', pk)
             return None, Response(
-                {'error': 'Channel not found.'},
+                {'error': _('Channel not found.')},
                 status=HTTP_404_NOT_FOUND
             )
     
@@ -88,7 +89,7 @@ class ChannelViewSet(ViewSet):
         
         if not team_id:
             return Response(
-                {'error': 'team_id query parameter is required.'},
+                {'error': _('team_id query parameter is required.')},
                 status=HTTP_400_BAD_REQUEST
             )
         
@@ -96,7 +97,7 @@ class ChannelViewSet(ViewSet):
             team_id = int(team_id)
         except (ValueError, TypeError):
             return Response(
-                {'error': 'team_id must be a valid integer.'},
+                {'error': _('team_id must be a valid integer.')},
                 status=HTTP_400_BAD_REQUEST
             )
 
@@ -126,7 +127,7 @@ class ChannelViewSet(ViewSet):
         
         serializer = ChannelSerializer(queryset, many=True)
         response_data = {
-            'message': 'List of channels',
+            'message': _('List of channels'),
             'count': queryset.count(),
             'data': serializer.data,
         }
@@ -162,7 +163,7 @@ class ChannelViewSet(ViewSet):
             logger.info('Channel retrieved from CACHE: id=%s by user=%s', pk, request.user.id)
             return Response(
                 {
-                    'message': 'Channel detail',
+                    'message': _('Channel detail'),
                     'data': cached_channel_data,
                 },
                 status=HTTP_200_OK
@@ -180,7 +181,7 @@ class ChannelViewSet(ViewSet):
         
         return Response(
             {
-                'message': 'Channel detail',
+                'message': _('Channel detail'),
                 'data': serializer.data,
             },
             status=HTTP_200_OK
@@ -222,7 +223,7 @@ class ChannelViewSet(ViewSet):
         
         return Response(
             {
-                'message': 'Channel created successfully',
+                'message': _('Channel created successfully'),
                 'data': ChannelSerializer(channel).data,
             },
             status=HTTP_201_CREATED
@@ -269,7 +270,7 @@ class ChannelViewSet(ViewSet):
         
         return Response(
             {
-                'message': 'Channel updated successfully',
+                'message': _('Channel updated successfully'),
                 'data': ChannelSerializer(channel).data,
             },
             status=HTTP_200_OK
@@ -302,7 +303,7 @@ class ChannelViewSet(ViewSet):
         )
         
         return Response(
-            {'message': 'Channel deleted successfully'},
+            {'message': _('Channel deleted successfully')},
             status=HTTP_204_NO_CONTENT
         )
     
@@ -326,7 +327,7 @@ class ChannelViewSet(ViewSet):
         # Check if channel is private
         if not channel.is_private:
             return Response(
-                {'error': 'This endpoint is only for private channels.'},
+                {'error': _('This endpoint is only for private channels.')},
                 status=HTTP_400_BAD_REQUEST
             )
         
@@ -353,7 +354,7 @@ class ChannelViewSet(ViewSet):
         
         return Response(
             {
-                'message': 'List of channel members',
+                'message': _('List of channel members'),
                 'count': memberships.count(),
                 'data': serializer.data,
             },
@@ -398,7 +399,7 @@ class ChannelViewSet(ViewSet):
         
         return Response(
             {
-                'message': 'Member added successfully',
+                'message': _('Member added successfully'),
                 'data': ChannelMembershipSerializer(membership).data,
             },
             status=HTTP_201_CREATED
@@ -410,7 +411,7 @@ class ChannelViewSet(ViewSet):
         
         if not user_id:
             return Response(
-                {'error': 'user_id is required.'},
+                {'error': _('user_id is required.')},
                 status=HTTP_400_BAD_REQUEST
             )
         
@@ -421,7 +422,7 @@ class ChannelViewSet(ViewSet):
         
         if not membership:
             return Response(
-                {'error': 'User is not a member of this channel.'},
+                {'error': _('User is not a member of this channel.')},
                 status=HTTP_404_NOT_FOUND
             )
         
@@ -438,6 +439,6 @@ class ChannelViewSet(ViewSet):
         )
         
         return Response(
-            {'message': 'Member removed successfully'},
+            {'message': _('Member removed successfully')},
             status=HTTP_204_NO_CONTENT
         )

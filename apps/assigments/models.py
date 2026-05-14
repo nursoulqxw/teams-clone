@@ -12,6 +12,7 @@ from django.db.models import (
     FileField
     
 )
+from django.utils.translation import gettext_lazy as _
 from apps.abstract.models import AbstractModel
 
 from apps.teams.models import Team
@@ -26,13 +27,16 @@ class Assignments(AbstractModel):
     )
     title = CharField(
         max_length=200,
-        help_text='Title'
+        help_text=_('Title')
     )
     description = TextField()
     due_data = DateField()
     max_points = IntegerField(
-        help_text='Points'
+        help_text=_('Points')
     )
+    class Meta:
+        verbose_name = _("Assignment")          
+        verbose_name_plural = _("Assignments")  
 
     def __str__(self):
         return f'Assigments - team:{self.team_id},title:{self.title}'
@@ -44,11 +48,11 @@ class Assignments(AbstractModel):
 class Assignment_Submissions(Model):
 
     STATUS = [
-        ('upcoming', 'Upcoming'),
-        ('overdue', 'Overdue'),
-        ('completed', 'Completed'),
-        ('completed_late','Completed_Late')
-    ]   
+        ('upcoming', _('Upcoming')),                 
+        ('overdue', _('Overdue')),                   
+        ('completed', _('Completed')),               
+        ('completed_late', _('Completed Late'))      
+    ]  
 
     assigment = ForeignKey(
         Assignments,
@@ -81,6 +85,10 @@ class Assignment_Submissions(Model):
         null=True
     )
 
+    class Meta:
+        verbose_name = _("Assignment Submission")         
+        verbose_name_plural = _("Assignment Submissions")
+        
     def __str__(self):
         return f'Assigment ID:{self.assigment_id},status:{self.status}'
 

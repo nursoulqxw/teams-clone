@@ -23,6 +23,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsOwnerOrAdmin
@@ -167,7 +168,7 @@ class AuthViewSet(ViewSet):
             logger.info(f"User registered successfully with email: {user.email}")
             return Response(
                 {
-                    "message": "User registered successfully",
+                    "message": _("User registered successfully"),
                     "user": CustomUserSerializer(user).data,
                 },
                 status=HTTP_200_OK,
@@ -260,10 +261,10 @@ class AuthViewSet(ViewSet):
             token = RefreshToken(refresh_token)
             token.blacklist()
             logger.info(f"Logout successful for email: {request.user.email}")
-            return Response({"message": "Logout successful"}, status=HTTP_200_OK)
+            return Response({"message": _("Logout successful")}, status=HTTP_200_OK)
         except Exception as e:
             logger.warning(f"Logout failed with error: {str(e)} for email: {request.user.email}")
-            return Response({"error": "Invalid token"}, status=HTTP_400_BAD_REQUEST)
+            return Response({"error": _("Invalid token")}, status=HTTP_400_BAD_REQUEST)
         
     @extend_schema (
         summary="get or update my profile",

@@ -11,6 +11,8 @@ from django.db.models import (
     Index,
     ManyToManyField
 )
+from django.utils.translation import gettext_lazy as _
+
 # Project imports
 from apps.abstract.models import AbstractModel
 from apps.users.models import CustomUser
@@ -27,25 +29,25 @@ class  Channel(AbstractModel):
 
     name = CharField(
         max_length=200,
-        help_text="Channel name (e.g., 'general', 'random)"
+        help_text=_("Channel name (e.g., 'general', 'random')")
     )
 
     description = TextField(
         blank=True,
         null=True,
-        help_text="Channel description"
+        help_text=_("Channel description")
     )
 
     team = ForeignKey(
         Team,
         on_delete=CASCADE,
         related_name='channels',
-        help_text="Parent team"
+        help_text=_("Parent team")
     )
 
     is_private = BooleanField(
         default=False,
-        help_text="IF True, only selected members can access this channel"
+        help_text=_("IF True, only selected members can access this channel")
     )
 
     members = ManyToManyField(
@@ -53,7 +55,7 @@ class  Channel(AbstractModel):
         through='ChannelMembership',
         related_name='private_channels',
         blank=True,
-        help_text="Members with access (for private channels only)"
+        help_text=_("Members with access (for private channels only)")
     )
 
     def __str__(self):
@@ -64,8 +66,8 @@ class  Channel(AbstractModel):
         return f"#{self.name} ({privacy}) - {self.team.name}"
     
     class Meta:
-        verbose_name = "Channel"
-        verbose_name_plural = "Channels"
+        verbose_name = _("Channel")            
+        verbose_name_plural = _("Channels")
         unique_together = ('team', 'name')
         ordering = ['team', 'name']
         indexes = [
@@ -108,8 +110,8 @@ class ChannelMembership(Model):
         return f"{self.user.email} in #{self.channel.name}"
     
     class Meta:
-        verbose_name = "Channel Membership"
-        verbose_name_plural = "Channel MemberShips"
+        verbose_name = _("Channel Membership")             
+        verbose_name_plural = _("Channel Memberships")
         unique_together = ('channel', 'user')
         indexes = [
             Index(fields=['channel', 'user']),

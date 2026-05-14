@@ -9,8 +9,10 @@ from rest_framework.serializers import (
     ValidationError, 
     CharField,
     BooleanField,
-    PrimaryKeyRelatedField
+    PrimaryKeyRelatedField,
+    ReadOnlyField
 )
+from django.utils.translation import gettext_lazy as _
 
 #Project import
 from .models import Channel, ChannelMembership
@@ -119,7 +121,7 @@ class CreateChannelSerializer(ModelSerializer):
                 name
             )
             raise ValidationError({
-                'name': f"Channel '{name}' already exists in this team."
+                'name': _("Channel '%(name)s' already exists in this team.") % {'name': name}  
             })
         
         # Check if user is a member of the team
@@ -127,7 +129,7 @@ class CreateChannelSerializer(ModelSerializer):
         if request and request.user:
             # fdfsd
             if not team.members.filter(id=request.user.id).exists():
-                raise ValidationError("You must be a team member to create channels")
+                raise ValidationError(_("You must be a team member to create channels"))
             pass
 
         return attrs
@@ -192,7 +194,7 @@ class UpdateChannelSerializer(ModelSerializer):
                 channel.team.id,
                 value
             )
-            raise ValidationError(f"Channel '{value}' already exists in this team")
+            raise ValidationError(_("Channel '%(name)s' already exists in this team.") % {'name': value})
         
         return value
     
@@ -259,7 +261,7 @@ class AddChannelMemberSerializer(ModelSerializer):
         # Check if channel is private
         if not channel.is_private:
             raise ValidationError({
-                'channel': "Can only add members to private channels."
+                'channel': _("Can only add members to private channels.")
             })
         
         # Check if user is already a member
@@ -270,13 +272,13 @@ class AddChannelMemberSerializer(ModelSerializer):
                 user.id
             )
             raise ValidationError({
-                'user' : "User is already a member of this channel"
+                'user': _("User is already a member of this channel")
             })
         
         # Check if user us a team member
         if not channel.team.members.filter(id=user.id).exists():
             raise ValidationError({
-                'user' : "User must be a team member to join this channel."
+                'user': _("User must be a team member to join this channel.")
             })
         
         return attrs

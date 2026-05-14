@@ -11,6 +11,7 @@ from django.db.models import (
     DateTimeField,
     ManyToManyField
 )
+from django.utils.translation import gettext_lazy as _
 
 #Project imports
 from apps.users.models import CustomUser
@@ -56,8 +57,8 @@ class Team(Model):
         }
     
     class Meta:
-        verbose_name = "Team"
-        verbose_name_plural = "Teams"
+        verbose_name = _("Team")            
+        verbose_name_plural = _("Teams")
         indexes = [
             Index(fields=['name']),
             Index(fields=['owner']),
@@ -87,9 +88,9 @@ class TeamMembership(Model):
     role = CharField(
         max_length=150,
         default='member',
-        choices=[
-            {'admin', 'Admin'},
-            {'member', 'Member'},
+        choices=[                             
+            ('admin', _('Admin')),
+            ('member', _('Member')),
         ]
     )
 
@@ -98,8 +99,8 @@ class TeamMembership(Model):
         return f"TeamMembership: {self.user.first_name} in {self.team.name}"
     
     class Meta:
-        verbose_name = "Team Membership"
-        verbose_name_plural = "Team Memberships"
+        verbose_name = _("Team Membership")             
+        verbose_name_plural = _("Team Memberships")
         unique_together = ('team', 'user')
         indexes = [
             Index(fields=['team','user']),
