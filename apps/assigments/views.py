@@ -14,6 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django.utils.translation import gettext_lazy as _
 
 # drf-spectacular
 from drf_spectacular.utils import (
@@ -112,7 +113,7 @@ class AssigmentsViewSet(ViewSet):
         except Assignments.DoesNotExist:
             logger.warning('Assignment not found: id=%s', pk)
             return None, Response(
-                {'error': 'Assignment not found.'},
+                {'error': _('Assignment not found.')},
                 status=HTTP_404_NOT_FOUND
             )
 
@@ -140,7 +141,7 @@ class AssigmentsViewSet(ViewSet):
         )
         return Response(
             {
-                'message':"List of Assigments",
+                'message': _("List of Assignments"),
                 'data':serializer.data
             },
             status=HTTP_200_OK
@@ -169,7 +170,7 @@ class AssigmentsViewSet(ViewSet):
             )
             return Response(
                 {
-                'message':"Assigments by team ID",
+                'message': _("Assignments by team ID"),
                 'data':serializer.data
                 },
                 status=HTTP_200_OK
@@ -181,7 +182,7 @@ class AssigmentsViewSet(ViewSet):
             )
             return Response(
                 {
-                    'message':"not team ID"
+                    'message': _("Invalid team ID")
                 },
                 status=HTTP_204_NO_CONTENT
             )
@@ -215,7 +216,7 @@ class AssigmentsViewSet(ViewSet):
             )
             return Response(
                 {
-                    'message':"Updated assigments",
+                    'message': _("Updated assignments"),
                     'data':AssigmentsSerialzers(assigment).data
                 }
             )
@@ -255,7 +256,7 @@ class AssigmentsViewSet(ViewSet):
             )
             return Response(
                 {
-                    'message':"Created assigment",
+                    'message': _("Created assignment"),
                     'data':AssigmentsSerialzers(assigment).data
                 },
                 status=HTTP_201_CREATED
@@ -357,7 +358,7 @@ class AssigmentsViewSet(ViewSet):
         )
         return Response(
             {
-                'message': 'Assignment submitted successfully',
+                'message': _('Assignment submitted successfully'),
                 'data': AssigmentsSubmissionsSerializers(submission).data,
             },
             status=HTTP_200_OK,
@@ -398,12 +399,9 @@ class AssigmentsViewSet(ViewSet):
                 assigment=assignment
             )
         except Assignment_Submissions.DoesNotExist:
-            logger,error(
-                'Grade of assignment:%s',
-                assignment.id
-            )
+            logger.error('Grade of assignment:%s', assignment.id)
             return Response(
-                {"error": "Submission not found"},
+                {"error": _("Submission not found")},
                 status=404
             )
 
@@ -419,7 +417,7 @@ class AssigmentsViewSet(ViewSet):
 
         return Response(
             {
-                "message": "Student graded successfully",
+                "message": _("Student graded successfully"),
                 "data": serializer.data
             }
         )

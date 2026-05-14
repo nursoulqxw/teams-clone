@@ -13,6 +13,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
     HTTP_204_NO_CONTENT,
 )
+from django.utils.translation import gettext_lazy as _
 
 #Project modules
 from .models import Message
@@ -57,7 +58,7 @@ class MessageViewSet(ViewSet):
         except Message.DoesNotExist:
             logger.warning("Message not found: id=%s", pk)
             return None, Response(
-                {"error": "Message not found"},
+                {"error": _("Message not found")},
                 status=HTTP_404_NOT_FOUND
             )
         
@@ -105,7 +106,7 @@ class MessageViewSet(ViewSet):
 
         return Response(
             {
-                "message": "List of messages",
+                "message": _("List of messages"),
                 "count": len(serializer.data),
                 "data": serializer.data,
             },
@@ -134,7 +135,7 @@ class MessageViewSet(ViewSet):
                 user.id, message.id, message.channel_id, message.channel.team_id
             )
             return Response(
-                {"error": "You have no access to this channel."},
+                {"error": _("You have no access to this channel.")},
                 status=HTTP_404_NOT_FOUND,  # часто отдают 404 чтобы не палить существование
             )
 
@@ -143,7 +144,7 @@ class MessageViewSet(ViewSet):
 
         return Response(
             {
-                "message": "Message detail",
+                "message": _("Message detail"),
                 "data": serializer.data,
             },
             status=HTTP_200_OK,
@@ -182,7 +183,7 @@ class MessageViewSet(ViewSet):
 
         return Response(
             {
-                "message": "Message created successfully",
+                "message": _("Message created successfully"),
                 "data": MessageSerializer(message).data,
             },
             status=HTTP_201_CREATED,
@@ -212,7 +213,7 @@ class MessageViewSet(ViewSet):
                 user.id, message.id, message.channel_id
             )
             return Response(
-                {"error": "You have no access to this channel."},
+                {"error": _("You have no access to this channel.")},
                 status=HTTP_404_NOT_FOUND,
             )
 
@@ -238,7 +239,7 @@ class MessageViewSet(ViewSet):
 
         return Response(
             {
-                "message": "Message updated successfully",
+                "message": _("Message updated successfully"),
                 "data": MessageSerializer(message).data,
             },
             status=HTTP_200_OK,
@@ -268,7 +269,7 @@ class MessageViewSet(ViewSet):
                 user.id, message.id, message.channel_id
             )
             return Response(
-                {"error": "You have no access to this channel."},
+                {"error": _("You have no access to this channel.")},
                 status=HTTP_404_NOT_FOUND,
             )
 
@@ -279,7 +280,7 @@ class MessageViewSet(ViewSet):
                 message.id, user.id, message.author_id
             )
             return Response(
-                {"error": "Only the author can delete this message."},
+                {"error": _("Only the author can delete this message.")},
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -289,6 +290,6 @@ class MessageViewSet(ViewSet):
         logger.info("Message deleted: id=%s by user=%s", msg_id, user.id)
 
         return Response(
-            {"message": "Message deleted successfully"},
+            {"message": _("Message deleted successfully")},
             status=HTTP_204_NO_CONTENT,
         )

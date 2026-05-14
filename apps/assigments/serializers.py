@@ -7,6 +7,7 @@ from rest_framework.serializers import (
 
 #Django modules
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 #Project modules
 from .models import (
