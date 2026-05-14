@@ -3,7 +3,6 @@ import { ClipboardList, Plus, ChevronDown, ChevronRight, Calendar, Check } from 
 import { useState } from "react";
 import { getAssignments, createAssignment, submitAssignment } from "../api/assignments";
 import { getTeams } from "../api/teams";
-import { useAuthStore } from "../store/authStore";
 import type { Assignment, Team } from "../types";
 
 function StatusBadge({ status }: { status?: string }) {
@@ -22,7 +21,6 @@ function StatusBadge({ status }: { status?: string }) {
 
 export default function AssignmentsPage() {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);

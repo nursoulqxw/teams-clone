@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, Plus, LogOut, User, ClipboardList } from "lucide-react";
+import { Plus, LogOut, User, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTeams, createTeam } from "../api/teams";
