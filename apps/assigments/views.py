@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
+from apps.utils.decoratos import call_log_api
 
 # drf-spectacular
 from drf_spectacular.utils import (
@@ -117,6 +118,7 @@ class AssigmentsViewSet(ViewSet):
                 status=HTTP_404_NOT_FOUND
             )
 
+    @call_log_api
     def list(
         self,
         request:Request,
@@ -147,6 +149,7 @@ class AssigmentsViewSet(ViewSet):
             status=HTTP_200_OK
         )
     
+    @call_log_api
     def retrieve(
         self,
         request:Request,
@@ -187,6 +190,7 @@ class AssigmentsViewSet(ViewSet):
                 status=HTTP_204_NO_CONTENT
             )
         
+    @call_log_api
     def partial_update(
         self,
         request:Request,
@@ -232,6 +236,7 @@ class AssigmentsViewSet(ViewSet):
             status=HTTP_400_BAD_REQUEST
         )
 
+    @call_log_api
     def create(
         self,
         request:Request
@@ -293,6 +298,7 @@ class AssigmentsViewSet(ViewSet):
             404: OpenApiResponse(description='Assignment or submission not found'),
         },
     )
+    @call_log_api
     @action(
         detail=True, 
         methods=['get', 'post'], 
@@ -364,6 +370,7 @@ class AssigmentsViewSet(ViewSet):
             status=HTTP_200_OK,
         )
     
+    @call_log_api
     @action(
         detail=True, 
         methods=['get'], 
@@ -381,6 +388,7 @@ class AssigmentsViewSet(ViewSet):
             
     from rest_framework.decorators import action
 
+    @call_log_api
     @action(
         detail=True,
         methods=["post"],

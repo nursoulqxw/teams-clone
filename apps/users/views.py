@@ -28,6 +28,7 @@ from django.db.models import Q
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsOwnerOrAdmin
 from rest_framework import status
+from apps.utils.decoratos import call_log_api
 #drf-spectacular
 from drf_spectacular.utils import(
     extend_schema, 
@@ -88,6 +89,7 @@ class AuthViewSet(ViewSet):
         ],
     )
 
+    @call_log_api
     @action(detail=False, methods=["post"], url_path="login")
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
     def login(
@@ -149,6 +151,7 @@ class AuthViewSet(ViewSet):
         ],
     )
 
+    @call_log_api
     @action(detail=False, methods=["post"], url_path="register")
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True))
     def register(
@@ -213,6 +216,7 @@ class AuthViewSet(ViewSet):
 
 
         
+    @call_log_api
     @action(detail=False, methods=["post"], url_path="token/refresh")
     def refresh(
         self,
@@ -249,6 +253,7 @@ class AuthViewSet(ViewSet):
 )
             
     
+    @call_log_api
     @action(detail=False, methods=["post"], url_path="logout")
     def logout(
         self,
@@ -290,6 +295,7 @@ class AuthViewSet(ViewSet):
     )      
             
     
+    @call_log_api
     @method_decorator(ratelimit(key="ip", rate="5/m", block=True), name="me")
     @action(detail=False, methods=["get", "patch"], url_path="me",
         permission_classes=[IsAuthenticated, IsOwnerOrAdmin])
@@ -325,6 +331,7 @@ class AuthViewSet(ViewSet):
         },
         tags=["Users"],
     )
+    @call_log_api
     def list(
             self,           
             request: Request,
