@@ -13,16 +13,25 @@ const LangContext = createContext<LangCtx>({
   tr: (k) => k,
 });
 
+const VALID_LANGS: Lang[] = ["en", "ru", "kz"];
+
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const stored = (localStorage.getItem("lang") as Lang) ?? "en";
-  const [lang, setLangState] = useState<Lang>(stored);
+  const stored = localStorage.getItem("lang") as Lang;
+  const initial: Lang = VALID_LANGS.includes(stored) ? stored : "en";
+  const [lang, setLangState] = useState<Lang>(initial);
 
   const setLang = useCallback((l: Lang) => {
     localStorage.setItem("lang", l);
     setLangState(l);
   }, []);
 
-  const tr = useCallback((key: TKey) => t[lang][key] as string, [lang]);
+  const tr = useCallback(
+    (key: TKey): string => {
+      const dict = t[lang] ?? t["en"];
+      return (dict[key] as string) ?? key;
+    },
+    [lang]
+  );
 
   return (
     <LangContext.Provider value={{ lang, setLang, tr }}>

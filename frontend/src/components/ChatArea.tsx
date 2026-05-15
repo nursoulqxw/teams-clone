@@ -135,11 +135,11 @@ export default function ChatArea() {
             <div className="space-y-1">
               {msgs.map((msg, i) => {
                 const showAvatar =
-                  i === 0 || msgs[i - 1].sender.id !== msg.sender.id;
-                const isOwn = msg.sender.id === user?.id;
-                const name = msg.sender.first_name
-                  ? `${msg.sender.first_name} ${msg.sender.last_name ?? ""}`.trim()
-                  : msg.sender.username;
+                  i === 0 || msgs[i - 1].author.id !== msg.author.id;
+                const isOwn = msg.author.id === user?.id;
+                const name = msg.author.first_name
+                  ? `${msg.author.first_name} ${msg.author.last_name ?? ""}`.trim()
+                  : msg.author.username;
 
                 return (
                   <div key={msg.id} className={`group flex gap-3 ${showAvatar ? "mt-3" : ""}`}>
@@ -226,24 +226,36 @@ export default function ChatArea() {
         {/* Live WS messages (before next poll) */}
         {wsMessages.length > 0 && (
           <div className="space-y-1">
-            {wsMessages.map((msg, i) => (
-              <div key={i} className="flex gap-3 mt-3">
-                <div className="w-9 h-9 rounded-full bg-[#6264A7] flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                  {(msg.sender ?? "?")[0]?.toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-2 mb-0.5">
-                    <span className="text-sm font-semibold text-gray-800">
-                      {msg.sender ?? "Unknown"}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {msg.timestamp ? formatTime(msg.timestamp) : "now"}
-                    </span>
+            {wsMessages.map((msg, i) => {
+              const showAvatar =
+                i === 0 || wsMessages[i - 1].sender !== msg.sender;
+              const name = msg.sender ?? "Unknown";
+
+              return (
+                <div key={i} className={`group flex gap-3 ${showAvatar ? "mt-3" : ""}`}>
+                  <div className="w-9 flex-shrink-0">
+                    {showAvatar && (
+                      <div className="w-9 h-9 rounded-full bg-[#6264A7] flex items-center justify-center text-white text-sm font-medium">
+                        {name[0]?.toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-700">{msg.message}</p>
+                  <div className="flex-1 min-w-0">
+                    {showAvatar && (
+                      <div className="flex items-baseline gap-2 mb-0.5">
+                        <span className="text-sm font-semibold text-gray-800">{name}</span>
+                        <span className="text-xs text-gray-400">
+                          {msg.timestamp ? formatTime(msg.timestamp) : "now"}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-700 leading-relaxed break-words">
+                      {msg.message}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

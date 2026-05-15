@@ -35,7 +35,7 @@ export interface Channel {
 export interface Message {
   id: number;
   channel: number;
-  sender: User;
+  author: User;
   content: string;
   created_at: string;
   updated_at: string;

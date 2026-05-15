@@ -9,7 +9,7 @@ export const getAssignments = (teamId?: number) =>
 export const createAssignment = (data: {
   title: string;
   description?: string;
-  team: number;
+  team_id: number;
   due_date?: string;
 }) => api.post<{ data: Assignment }>("/assignment/", data);
 
