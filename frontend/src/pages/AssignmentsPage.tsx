@@ -24,7 +24,9 @@ export default function AssignmentsPage() {
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", due_date: "" });
+  const [form, setForm] = useState<{ title: string; description: string; due_data: string; max_points?: number }>(
+    { title: "", description: "", due_data: "", max_points: undefined }
+  );
 
   const { data: teams = [] } = useQuery({
     queryKey: ["teams"],
@@ -44,13 +46,14 @@ export default function AssignmentsPage() {
       createAssignment({
         title: form.title,
         description: form.description || undefined,
-        team: selectedTeam!,
-        due_date: form.due_date || undefined,
+        team_id: selectedTeam!,
+        due_data: form.due_data || undefined,
+        max_points: form.max_points || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       setShowCreate(false);
-      setForm({ title: "", description: "", due_date: "" });
+      setForm({ title: "", description: "", due_data: "", max_points: undefined });
     },
   });
 
@@ -121,7 +124,6 @@ export default function AssignmentsPage() {
               placeholder="Title"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6264A7] text-gray-800 bg-white"
             />
-
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -129,12 +131,30 @@ export default function AssignmentsPage() {
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6264A7] resize-none text-gray-800 bg-white"
             />
-            <input
-              type="datetime-local"
-              value={form.due_date}
-              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#6264A7]"
-            />
+
+            {/* Due date — календарь picker */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 font-medium">Due date</label>
+              <input
+                type="date"
+                value={form.due_data}
+                onChange={(e) => setForm({ ...form, due_data: e.target.value })}
+                min={new Date().toISOString().split("T")[0]}
+                className="w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:border-[#6264A7] cursor-pointer"
+              />
+            </div>
+              {/* Max points */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-500 font-medium">Max points</label>
+                <input
+                  type="number"
+                  value={form.max_points}
+                  onChange={(e) => setForm({ ...form, max_points: Number(e.target.value) })}
+                  min="0"
+                  className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:border-[#6264A7] cursor-pointer"
+                />
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={() => createMutation.mutate()}
@@ -181,11 +201,11 @@ export default function AssignmentsPage() {
                       <span className="font-medium text-gray-800 text-sm">{a.title}</span>
                       <StatusBadge status={a.status} />
                     </div>
-                    {a.due_date && (
+                    {a.due_data && (
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-400">
                         <Calendar size={11} />
                         Due{" "}
-                        {new Date(a.due_date).toLocaleDateString([], {
+                        {new Date(a.due_data).toLocaleDateString([], {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
