@@ -78,8 +78,6 @@ services:
     build: .
     container_name: teams_flower
     command: celery -A settings.celery flower --basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD}
-    volumes:
-      - .:/app
     ports:
       - "5555:5555"
     env_file:

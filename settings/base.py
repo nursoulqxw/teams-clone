@@ -97,14 +97,10 @@ LOGGING = {
             "encoding": "utf-8",
         },
         "debug_only": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "filename": "logs/debug_requests.log",
-            "maxBytes": 5 * 1024 * 1024,  # 10 MB
-            "backupCount": 3,
-            "formatter": "verbose",
-            "filters": ["require_debug_true"],
-            "encoding": "utf-8",
+        "class": "logging.StreamHandler",
+        "level": "DEBUG",
+        "formatter": "simple",
+        "filters": ["require_debug_true"],
         },
     },
     "loggers": {

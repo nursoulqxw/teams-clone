@@ -25,11 +25,15 @@ from .serializers import (
 from .filters import build_message_q
 from .tasks import send_message_notification
 from .permissions import IsAuthorOrReadOnly
+from apps.utils.mixins import (
+    TeamAccessMixin,
+    LoggingMixin
+)
 
 logger = logging.getLogger(__name__)
 
 
-class MessageViewSet(ViewSet):
+class MessageViewSet(ViewSet, TeamAccessMixin, LoggingMixin):
     """
     Message endpoints:
         GET    api/messages/           - list messages (optionally ?channel=<id>)
