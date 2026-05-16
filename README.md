@@ -1,189 +1,191 @@
-# Teams Clone — Backend
+# Teams Clone
 
-> Microsoft Teams Clone REST API built with Django + DRF + JWT
+A full-stack replica of a team collaboration platform inspired by Microsoft Teams. This project includes both backend and frontend components, allowing teams to collaborate via channels, messages, and team memberships.
 
 ---
 
-## 🗂 Project Structure
+## Table of Contents
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Setup Instructions](#setup-instructions)
+  - [System Requirements](#system-requirements)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+### Backend:
+- **Authentication & Authorization**: Custom user models with JWT-based authentication
+- **Teams and Memberships**: Create, update, and manage teams and members
+- **Channels**: Public and private channels for discussions
+- **Messages**: Real-time message posting CRUD
+
+### Frontend:
+- **React-based UI** with routing and state management
+- **Real-time updates and search**
+- **Responsive design**
+
+---
+
+## Project Structure
 
 ```
-teams_clone/
-├── manage.py
-├── .gitignore
-├── .env.example
-├── requirements/
-│   ├── base.txt
-│   ├── dev.txt
-│   └── prod.txt
-├── logs/
-├── apps/                      ← all Django apps go here
-│   ├── users/                 (Member 1)
-│   ├── teams/                 (Member 2)
-│   ├── channels/              (Member 3)
-│   └── messages/              (Member 4)
-└── settings/
-    ├── __init__.py
-    ├── conf.py                ← reads .env
-    ├── base.py                ← shared settings
-    ├── urls.py                ← root URLs
-    ├── wsgi.py
-    ├── asgi.py
-    └── env/
-        ├── local.py           ← SQLite, DEBUG=True
-        └── prod.py            ← PostgreSQL, DEBUG=False
-```
-
----
-
-## ⚡ Quick Start (for every team member)
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/teams-clone-project.git
-cd teams-clone-project
-
-# 2. Create virtual environment
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-# 3. Install dev dependencies
-pip install -r requirements/dev.txt
-
-# 4. Create your local .env
-cp .env.example settings/.env
-# Open settings/.env and set SECRET_KEY to any random string
-
-# 5. Run migrations & start server
-python manage.py migrate
-python manage.py runserver
-```
-
-API docs available at: http://127.0.0.1:8000/api/docs/
-
----
-
-## 🌿 Git Workflow
-
-```
-main  ← protected, only PRs allowed
-└── teams-clone-project  ← team branch (create this first)
-    ├── feature/users-app        (Member 1)
-    ├── feature/teams-app        (Member 2)
-    ├── feature/channels-app     (Member 3)
-    └── feature/messages-app     (Member 4)
-```
-
-**Rules:**
-- Never push directly to `main`
-- Create your feature branch from `teams-clone-project`
-- Open a Pull Request when your feature is ready
-- Team lead reviews and merges
-
----
-
-## 👥 Team Task Division
-
-### 🧑‍💻 Member 1 — Users & Authentication
-**Branch:** `feature/users-app`
-**App:** `apps/users/`
-
-**Tasks:**
-- Custom User model (email as unique field)
-- JWT Registration endpoint (`POST /api/users/register/`)
-- JWT Login endpoint (`POST /api/users/login/`)
-- JWT Refresh endpoint (`POST /api/users/token/refresh/`)
-- Profile retrieve/update endpoint (`GET/PATCH /api/users/me/`)
-- User list with filtering by email/name (`GET /api/users/`)
-- Custom permission: `IsOwnerOrAdmin`
-- Admin panel configuration for User model
-- Serializers: RegisterSerializer, LoginSerializer, UserProfileSerializer
-- Data filling management command (`python manage.py seed_users`)
-
-**Endpoints (minimum):** 5
-
----
-
-### 🧑‍💻 Member 2 — Teams & Memberships
-**Branch:** `feature/teams-app`
-**App:** `apps/teams/`
-
-**Tasks:**
-- Team model (name, description, owner, created_at)
-- TeamMember model (team, user, role: owner/admin/member)
-- CRUD for Teams (`GET/POST /api/teams/`, `GET/PATCH/DELETE /api/teams/{id}/`)
-- Add/remove members (`POST/DELETE /api/teams/{id}/members/`)
-- Filter teams by name, owner (`GET /api/teams/?name=...`)
-- Custom permission: `IsTeamOwner`, `IsTeamMember`
-- Admin panel configuration
-- Serializers: TeamSerializer, TeamMemberSerializer
-- Data filling management command (`python manage.py seed_teams`)
-
-**Endpoints (minimum):** 4
-
----
-
-### 🧑‍💻 Member 3 — Channels
-**Branch:** `feature/channels-app`
-**App:** `apps/channels/`
-
-**Tasks:**
-- Channel model (name, description, team, is_private, created_by)
-- ChannelMember model (channel, user, joined_at)
-- CRUD for Channels (`GET/POST /api/channels/`, `GET/PATCH/DELETE /api/channels/{id}/`)
-- Join/leave channel (`POST /api/channels/{id}/join/`, `POST /api/channels/{id}/leave/`)
-- Filter channels by team, is_private (`GET /api/channels/?team=1&is_private=false`)
-- Custom permission: `IsChannelMember`, `IsChannelAdmin`
-- Admin panel configuration
-- Serializers: ChannelSerializer, ChannelMemberSerializer
-- Data filling management command (`python manage.py seed_channels`)
-
-**Endpoints (minimum):** 4
-
----
-
-### 🧑‍💻 Member 4 — Messages
-**Branch:** `feature/messages-app`
-**App:** `apps/messages/`
-
-**Tasks:**
-- Message model (content, channel, sender, created_at, updated_at, is_edited)
-- CRUD for Messages (`GET/POST /api/messages/`, `GET/PATCH/DELETE /api/messages/{id}/`)
-- Filter messages by channel, sender, date range
-- Search messages by content (`GET /api/messages/?search=hello`)
-- Custom permission: `IsMessageSender`
-- Admin panel configuration
-- Serializers: MessageSerializer, MessageCreateSerializer
-- Data filling management command (`python manage.py seed_messages`)
-
-**Endpoints (minimum):** 3
-
----
-
-## 📌 How to Add Your App
-
-```bash
-# 1. Create your app inside apps/ folder
-python manage.py startapp your_app_name apps/your_app_name
-
-# 2. In your app's apps.py, change name to:
-#    name = "apps.your_app_name"
-
-# 3. In settings/base.py, add to INSTALLED_APPS:
-#    "apps.your_app_name",
-
-# 4. In settings/urls.py, add your URLs:
-#    path("api/your_app/", include("apps.your_app_name.urls")),
+teams-clone/
+├── backend/
+│   ├── apps/
+│   │   ├── users/
+│   │   ├── teams/
+│   │   ├── channels/
+│   │   └── messages/
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── local.py
+│   │   ├── prod.py
+│   └── requirements/
+│       ├── base.txt
+│       ├── dev.txt
+│       └── prod.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── api/
+│   │   ├── types/
+│   │   └── App.tsx
+│   ├── public/
+│   └── package.json
+│
 ```
 
 ---
 
-## 🔐 Environment Variables
+## Tech Stack
+- **Backend**: Django, Django REST Framework
+- **Frontend**: React, TypeScript
+- **Database**: PostgreSQL
 
-| Variable | Default | Description |
-|---|---|---|
-| `TEAMS_ENV_ID` | `local` | `local` or `prod` |
-| `SECRET_KEY` | — | Django secret key (required) |
-| `DEBUG` | `True` | Debug mode |
-| `DB_ENGINE` | sqlite3 | Database engine |
-| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | `60` | JWT access token lifetime |
-# activate
+---
+
+## Setup Instructions
+
+### System Requirements
+
+- **Backend**:
+  - Python 3.8 or higher
+  - PostgreSQL
+- **Frontend**:
+  - Node.js 16 or higher
+  - npm or yarn
+
+---
+
+### Backend Setup
+
+1. **Clone the Repository**
+   ```shell
+   git clone https://github.com/Nurasyl555/teams-clone.git
+   cd teams-clone
+   ```
+
+2. **Configure Environment**
+   - Navigate to the `backend/` directory.
+   - Create an `.env` file by copying `.env.example`:
+     ```shell
+     cp .env.example .env
+     ```
+   - Update the `.env` file with your PostgreSQL credentials.
+
+3. **Install Dependencies**
+   ```shell
+   pip install -r requirements/dev.txt
+   ```
+
+4. **Apply Migrations**
+   ```shell
+   python manage.py migrate
+   ```
+
+5. **Seed the Database**
+   Run management commands to populate data:
+   ```shell
+   python manage.py seed_users
+   python manage.py seed_teams
+   python manage.py seed_channels
+   python manage.py seed_messages
+   ```
+
+6. **Run the Development Server**
+   ```shell
+   python manage.py runserver
+   ```
+
+7. **Verify Endpoints**
+   Test the APIs using tools like Postman.
+
+---
+
+### Frontend Setup
+
+1. **Navigate to Frontend Directory**
+   ```shell
+   cd ../frontend
+   ```
+
+2. **Install Dependencies**
+   Using npm:
+   ```shell
+   npm install
+   ```
+
+   Or with yarn:
+   ```shell
+   yarn install
+   ```
+
+3. **Start the Development Server**
+   ```shell
+   npm start
+   ```
+   The server will be available at `http://localhost:3000`.
+
+4. **Build for Production**
+   To create a production build, run:
+   ```shell
+   npm run build
+   ```
+
+---
+
+## Contributing
+
+1. Create a feature branch:
+   ```shell
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make changes and commit:
+   ```shell
+   git commit -m "Add your message here"
+   ```
+
+3. Push to the branch:
+   ```shell
+   git push origin feature/your-feature-name
+   ```
+
+4. Open a pull request on GitHub.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+**Created by [Nurasyl555](https://github.com/Nurasyl555).**

@@ -75,7 +75,7 @@ services:
   # nginx:
 
   flower:
-    build: .
+    image: teams-clone:latest
     container_name: teams_flower
     command: celery -A settings.celery flower --basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD}
     ports:
@@ -83,6 +83,8 @@ services:
     env_file:
       - .env
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped

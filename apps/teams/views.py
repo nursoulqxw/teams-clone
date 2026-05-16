@@ -613,9 +613,8 @@ class TeamViewSet(ViewSet, TeamAccessMixin,LoggingMixin):
         memberships = TeamMembership.objects.filter(
             filtering
         ).select_related(
-            'user'
-        ).prefetch_related(
-            'members'
+            'user',
+            'team'
         )
 
         serializer = TeamMembershipSerializer(
