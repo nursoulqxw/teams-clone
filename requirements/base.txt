@@ -15,3 +15,4 @@ flower
 django-celery-beat
 aiohttp
 django_redis
+django-debug-toolbar

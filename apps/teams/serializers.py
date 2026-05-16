@@ -23,6 +23,11 @@ class TeamSerializer(ModelSerializer):
     Read-only serializer for Team
     Used in: list, retrieve
     """
+    owner = IntegerField(
+        source='owner.id',
+        read_only=True
+    )
+
     owner_info = SerializerMethodField()
     members = UserListSerializer(
         many=True, 
@@ -36,6 +41,7 @@ class TeamSerializer(ModelSerializer):
             'id',
             'name',
             'description',
+            'owner',
             'owner_info',
             'members',
             'members_count',
