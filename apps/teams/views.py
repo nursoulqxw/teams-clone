@@ -62,7 +62,7 @@ TEAM_MEMBERS_TAG = 'Team Members'
         description='Supports filtering.',
         tags=[TEAM_TAG],
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=TeamSerializer(many=True),
                 description='Teams list returned successfully',
             )
@@ -72,11 +72,11 @@ TEAM_MEMBERS_TAG = 'Team Members'
         summary='Retrieve a team',
         tags=[TEAM_TAG],
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=TeamSerializer, 
                 description='Team found'
             ),
-            404: OpenApiResponse(
+            HTTP_404_NOT_FOUND: OpenApiResponse(
                 description='Team not found'
             ),
         },
@@ -86,11 +86,11 @@ TEAM_MEMBERS_TAG = 'Team Members'
         tags=[TEAM_TAG],
         request=CreateTeamSerializer,
         responses={
-            201: OpenApiResponse(
+            HTTP_201_CREATED: OpenApiResponse(
                 response=TeamSerializer, 
                 description='Team created successfully'
             ),
-            400: OpenApiResponse(description='Validation error'),
+            HTTP_400_BAD_REQUEST: OpenApiResponse(description='Validation error'),
         },
     ),
     partial_update=extend_schema(
@@ -98,22 +98,22 @@ TEAM_MEMBERS_TAG = 'Team Members'
         tags=[TEAM_TAG],
         request=UpdateTeamSerializer,
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=TeamSerializer, 
                 description='Team updated successfully'
             ),
-            400: OpenApiResponse(description='Validation error'),
-            404: OpenApiResponse(description='Team not found'),
+            HTTP_400_BAD_REQUEST: OpenApiResponse(description='Validation error'),
+            HTTP_404_NOT_FOUND: OpenApiResponse(description='Team not found'),
         },
     ),
     destroy=extend_schema(
         summary='Delete a team',
         tags=[TEAM_TAG],
         responses={
-            204: OpenApiResponse(
+            HTTP_204_NO_CONTENT: OpenApiResponse(
                 description='Team deleted successfully'
             ),
-            404: OpenApiResponse(description='Team not found'),
+            HTTP_404_NOT_FOUND: OpenApiResponse(description='Team not found'),
         },
     ),
 )
@@ -353,11 +353,11 @@ class TeamViewSet(ViewSet, TeamAccessMixin,LoggingMixin):
         summary='List team members',
         tags=[TEAM_MEMBERS_TAG],
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=TeamMembershipSerializer(many=True),
                 description='Members list returned successfully',
             ),
-            404: OpenApiResponse(
+            HTTP_404_NOT_FOUND: OpenApiResponse(
                 description='Team not found'
             ),
         },
@@ -368,14 +368,14 @@ class TeamViewSet(ViewSet, TeamAccessMixin,LoggingMixin):
         tags=[TEAM_MEMBERS_TAG],
         request=CreateTeamMembershipSerializer,
         responses={
-            201: OpenApiResponse(
+            HTTP_201_CREATED: OpenApiResponse(
                 response=TeamMembershipSerializer, 
                 description='Member added successfully'
             ),
-            400: OpenApiResponse(
+            HTTP_400_BAD_REQUEST: OpenApiResponse(
                 description='Validation error'
             ),
-            404: OpenApiResponse(
+            HTTP_404_NOT_FOUND: OpenApiResponse(
                 description='Team not found'
             ),
         },
@@ -393,13 +393,13 @@ class TeamViewSet(ViewSet, TeamAccessMixin,LoggingMixin):
             )
         ],
         responses={
-            204: OpenApiResponse(
+            HTTP_204_NO_CONTENT: OpenApiResponse(
                 description='Member removed successfully'
             ),
-            400: OpenApiResponse(
+            HTTP_400_BAD_REQUEST: OpenApiResponse(
                 description='user_id is required'
             ),
-            404: OpenApiResponse(
+            HTTP_404_NOT_FOUND: OpenApiResponse(
                 description='Team or member not found'
             ),
         },

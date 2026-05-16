@@ -1,6 +1,9 @@
 #Python modules
 import logging
 
+# Django modules
+from django.utils.translation import gettext_lazy as _
+
 #REST modules
 from rest_framework.viewsets import ViewSet
 from rest_framework.status import(
@@ -14,8 +17,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from django.utils.translation import gettext_lazy as _
-from apps.utils.decoratos import call_log_api
+from rest_framework.parsers import (
+    MultiPartParser,
+    FormParser, 
+    JSONParser
+)
 
 # drf-spectacular
 from drf_spectacular.utils import (
@@ -39,6 +45,8 @@ from .models import (
     Assignment_Submissions
 )
 from .permissions import IsTeamOwner, IsTeamMember
+from apps.utils.decoratos import call_log_api
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +56,7 @@ logger = logging.getLogger(__name__)
         summary='List all assignments',
         tags=['Assignments'],
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=AssigmentsSerialzers(many=True),
                 description='Assignments list returned successfully',
             ),
@@ -58,8 +66,13 @@ logger = logging.getLogger(__name__)
         summary='Retrieve assignments by team ID',
         tags=['Assignments'],
         responses={
-            200: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment found'),
-            404: OpenApiResponse(description='Assignment not found'),
+            HTTP_200_OK: OpenApiResponse(
+                response=AssigmentsSerialzers,
+                description='Assignment found'
+            ),
+            HTTP_404_NOT_FOUND: OpenApiResponse(
+                description='Assignment not found'
+            ),
         },
     ),
     partial_update=extend_schema(
@@ -67,9 +80,16 @@ logger = logging.getLogger(__name__)
         tags=['Assignments'],
         request=UpdateAssigmentsSerializers,
         responses={
-            200: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment updated successfully'),
-            400: OpenApiResponse(description='Validation error'),
-            404: OpenApiResponse(description='Assignment not found'),
+            HTTP_200_OK: OpenApiResponse(
+                response=AssigmentsSerialzers,
+                description='Assignment updated successfully'
+            ),
+            HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description='Validation error'
+            ),
+            HTTP_404_NOT_FOUND: OpenApiResponse(
+                description='Assignment not found'
+            ),
         },
     ),
     create=extend_schema(
@@ -77,8 +97,12 @@ logger = logging.getLogger(__name__)
         tags=['Assignments'],
         request=CreateAssigmentsSerializers,
         responses={
-            201: OpenApiResponse(response=AssigmentsSerialzers, description='Assignment created successfully'),
-            400: OpenApiResponse(description='Validation error'),
+            HTTP_201_CREATED: OpenApiResponse(
+                response=AssigmentsSerialzers, 
+                description='Assignment created successfully'),
+            HTTP_400_BAD_REQUEST: OpenApiResponse(
+                description='Validation error'
+            ),
         },
     ),
 )
@@ -89,6 +113,12 @@ class AssigmentsViewSet(ViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+
+    parser_classes = [
+        MultiPartParser,
+        FormParser,
+        JSONParser
+    ]
 
     def get_permissions(self):
         if self.action in ['create', 'partial_update']:
@@ -282,11 +312,11 @@ class AssigmentsViewSet(ViewSet):
         summary='List submissions for an assignment',
         tags=['Submissions'],
         responses={
-            200: OpenApiResponse(
+            HTTP_200_OK: OpenApiResponse(
                 response=AssigmentsSubmissionsSerializers(many=True),
                 description='Submissions returned',
             ),
-            404: OpenApiResponse(description='Assignment not found'),
+            HTTP_404_NOT_FOUND: OpenApiResponse(description='Assignment not found'),
         },
     )
     @extend_schema(
@@ -294,8 +324,8 @@ class AssigmentsViewSet(ViewSet):
         summary='Submit an assignment',
         tags=['Submissions'],
         responses={
-            200: OpenApiResponse(response=AssigmentsSubmissionsSerializers, description='Submitted'),
-            404: OpenApiResponse(description='Assignment or submission not found'),
+            HTTP_200_OK: OpenApiResponse(response=AssigmentsSubmissionsSerializers, description='Submitted'),
+            HTTP_404_NOT_FOUND: OpenApiResponse(description='Assignment or submission not found'),
         },
     )
     @call_log_api
@@ -344,8 +374,6 @@ class AssigmentsViewSet(ViewSet):
                 student_id=request.user,
             )
 
-        submission.submitted = True
-
         serializer = CompletedAssigmentsSerializers(
             submission,
             data=request.data,
@@ -377,16 +405,29 @@ class AssigmentsViewSet(ViewSet):
         url_path='submissions'
     )
     def submissions(self, request, pk=None):
-
-        assignment = self.get_object()
+        
+        
+        assignment, error = self.get_assigment_or_404(pk)
+        if error:
+            return error
+ 
+        # IsTeamOwner permission тексеру
+        if assignment.team_id.owner != request.user:
+            return Response(
+                {"error": _("Only team owner can view submissions.")},
+                status=HTTP_404_NOT_FOUND
+            )
+ 
         submissions = assignment.submissions.all()
 
         serializer = SubmissionListSerializer(submissions, many=True)
-        logger.info('Team owner see submissions: assignment:%s',assignment.id)
 
+        logger.info(
+            'Team owner sees submissions: assignment:%s',
+            assignment.id
+        )
+ 
         return Response(serializer.data)
-            
-    from rest_framework.decorators import action
 
     @call_log_api
     @action(
@@ -410,7 +451,7 @@ class AssigmentsViewSet(ViewSet):
             logger.error('Grade of assignment:%s', assignment.id)
             return Response(
                 {"error": _("Submission not found")},
-                status=404
+                status=HTTP_404_NOT_FOUND
             )
 
         serializer = GradeSubmissionSerializer(

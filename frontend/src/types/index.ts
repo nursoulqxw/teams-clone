@@ -11,9 +11,17 @@ export interface Team {
   id: number;
   name: string;
   description?: string;
+
   owner: number;
-  members: number[];
-  created_at: string;
+
+  owner_info?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+
+  members?: User[];
+  members_count?: number;
 }
 
 export interface TeamMember {
@@ -53,14 +61,27 @@ export interface Assignment {
   status?: string;
 }
 
-export interface AssignmentSubmission {
+export interface ShortAssignment {
   id: number;
-  assignment: number;
-  student_id: User;
+  title: string;
+}
+
+export interface StudentInfo {
+  id: number;
+  email: string;
+}
+
+export interface AssignmentSubmission {
+  assigment: ShortAssignment;
+  student_info: StudentInfo;
+
   submitted: boolean;
   status: string;
-  grade?: number;
   submitted_at?: string;
+
+  points_awarded?: number;
+
+  file?: string;
 }
 
 export interface TokenPair {

@@ -20,11 +20,15 @@ export const getAssignment = (id: number) =>
 export const updateAssignment = (id: number, data: Partial<Assignment>) =>
   api.patch<{ data: Assignment }>(`/assignment/${id}/`, data);
 
-export const submitAssignment = (id: number, data?: object) =>
-  api.post<{ data: AssignmentSubmission }>(
-    `/assignment/${id}/submit/`,
-    data ?? {}
+export const submitAssignment = async (
+  assignmentId: number,
+  formData: FormData
+) => {
+  return api.post(
+    `/assignment/${assignmentId}/submit/`,
+    formData
   );
+};
 
 export const getSubmissions = (assignmentId: number) =>
   api.get<AssignmentSubmission[]>(`/assignment/${assignmentId}/submissions/`);
@@ -32,6 +36,6 @@ export const getSubmissions = (assignmentId: number) =>
 export const gradeSubmission = (
   assignmentId: number,
   submissionId: number,
-  grade: number
+  points: number
 ) =>
-  api.post(`/assignment/${assignmentId}/grade/${submissionId}/`, { grade });
+  api.post(`/assignment/${assignmentId}/grade/${submissionId}/`, {points_awarded: points});

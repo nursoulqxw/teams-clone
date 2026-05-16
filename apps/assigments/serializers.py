@@ -26,6 +26,7 @@ class AssigmentsSerialzers(ModelSerializer):
     class Meta:
         model = Assignments
         fields = [
+            'id',
             'team_info',
             'title',
             'description',
@@ -98,11 +99,14 @@ class AssigmentsSubmissionsSerializers(ModelSerializer):
     class Meta:
         model = Assignment_Submissions
         fields = [
+            'id',
             'assigment',
             'student_info',
             'status',
             'submitted',
-            'submitted_at'
+            'submitted_at',
+            'file',
+            'points_awarded'
         ]
 
     def get_student_info(
@@ -165,7 +169,7 @@ class CompletedAssigmentsSerializers(ModelSerializer):
 
 class SubmissionListSerializer(ModelSerializer):
 
-    student_email = EmailField(source='student.email')
+    student_email = EmailField(source='student_id.email')
 
     class Meta:
         model = Assignment_Submissions
@@ -175,6 +179,7 @@ class SubmissionListSerializer(ModelSerializer):
             'submitted',
             'submitted_at',
             'status',
+            'points_awarded'
         ]
 
 
