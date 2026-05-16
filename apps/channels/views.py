@@ -2,6 +2,7 @@
 import logging
 from django.db.models import Q, Count
 # Rest modules
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.status import (
@@ -16,6 +17,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import gettext_lazy as _
+
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes,
+    inline_serializer,
+)
 
 # Project modules
 from .serializers import (
@@ -79,6 +87,30 @@ class ChannelViewSet(ViewSet):
                 status=HTTP_404_NOT_FOUND
             )
     
+    @extend_schema(
+        summary="Получить список каналов",
+        description=(
+            "Возвращает список всех публичных каналов команды, "
+            "а также приватные каналы, в которых состоит текущий пользователь."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name='team_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description='ID команды для фильтрации каналов'
+            ),
+            OpenApiParameter(
+                name='team',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Альтернативный параметр ID команды'
+            ),
+        ],
+        responses={200: ChannelSerializer(many=True)}
+    )
     def list(self, request: Request) -> Response:
         """
         GET /api/channels/?team_id={id}
@@ -144,6 +176,11 @@ class ChannelViewSet(ViewSet):
         
         return Response(response_data, status=HTTP_200_OK)
     
+    @extend_schema(
+        summary="Получить детали канала",
+        description="Возвращает подробную информацию о конкретном канале по его ID.",
+        responses={200: ChannelSerializer()}
+    )
     def retrieve(self, request: Request, pk: int = None) -> Response:
         """
         GET /api/channels/{id}/
@@ -187,6 +224,12 @@ class ChannelViewSet(ViewSet):
             status=HTTP_200_OK
         )
     
+    @extend_schema(
+        summary="Создать канал",
+        description="Создает новый канал в указанной команде.",
+        request=CreateChannelSerializer,
+        responses={201: ChannelSerializer()}
+    )
     def create(self, request: Request) -> Response:
         """
         POST /api/channels/
@@ -229,6 +272,12 @@ class ChannelViewSet(ViewSet):
             status=HTTP_201_CREATED
         )
     
+    @extend_schema(
+        summary="Обновить канал",
+        description="Частично обновляет данные существующего канала.",
+        request=UpdateChannelSerializer,
+        responses={200: ChannelSerializer()}
+    )
     def partial_update(self, request: Request, pk: int = None) -> Response:
         """
         PATCH /api/channels/{id}/
@@ -276,6 +325,11 @@ class ChannelViewSet(ViewSet):
             status=HTTP_200_OK
         )
     
+    @extend_schema(
+        summary="Удалить канал",
+        description="Полностью удаляет канал по его ID.",
+        responses={204: None}
+    )
     def destroy(self, request: Request, pk: int = None) -> Response:
         """
         DELETE /api/channels/{id}/
@@ -307,6 +361,29 @@ class ChannelViewSet(ViewSet):
             status=HTTP_204_NO_CONTENT
         )
     
+    @extend_schema(
+        methods=['GET'],
+        summary="Список участников канала",
+        description="Возвращает список всех участников приватного канала.",
+        responses={200: ChannelMembershipSerializer(many=True)}
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary="Добавить участника в канал",
+        description="Добавляет нового пользователя в приватный канал.",
+        request=AddChannelMemberSerializer,
+        responses={201: ChannelMembershipSerializer()}
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary="Удалить участника из канала",
+        description="Удаляет пользователя из приватного канала по его user_id.",
+        request=inline_serializer(
+            name='RemoveMemberSerializer',
+            fields={'user_id': serializers.IntegerField(help_text="ID пользователя для удаления")}
+        ),
+        responses={204: None}
+    )
     @action(
         detail=True,
         methods=['get', 'post', 'delete'],
