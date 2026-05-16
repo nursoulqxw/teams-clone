@@ -107,7 +107,6 @@ export default function ChannelList() {
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 space-y-1">
-        {/* Channels */}
         <div className="px-2">
           <button
             onClick={() => setChannelsOpen((v) => !v)}
