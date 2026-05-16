@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     "django_filters",
     "channels",
     "django_celery_beat",
-    "debug_toolbar",
+    #"debug_toolbar",
     "rest_framework_simplejwt.token_blacklist",
     # Local apps
     "apps.abstract",
