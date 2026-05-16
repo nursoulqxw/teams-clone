@@ -1,9 +1,13 @@
+# Django modules
 from django.contrib.admin import register, ModelAdmin, TabularInline
 
+# Project modules
 from .models import Message
 
 
 class ReplyInline(TabularInline):
+    """Inline admin view for replies nested under a parent message."""
+
     model = Message
     fk_name = "parent_message"
     extra = 0
@@ -14,19 +18,42 @@ class ReplyInline(TabularInline):
 
 @register(Message)
 class MessageAdmin(ModelAdmin):
-    list_display = ("id", "author", "channel", "short_content", "has_replies", "created_at", "updated_at")
+    """Admin configuration for the Message model."""
+
+    SHORT_CONTENT_LENGTH = 60
+
+    list_display = (
+        "id",
+        "author",
+        "channel",
+        "short_content",
+        "has_replies",
+        "created_at",
+        "updated_at",
+    )
     list_filter = ("channel", "author", "created_at")
-    search_fields = ("content", "author__email", "author__first_name", "author__last_name")
+    search_fields = (
+        "content",
+        "author__email",
+        "author__first_name",
+        "author__last_name",
+    )
     raw_id_fields = ("author", "channel", "parent_message")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
-    inlines = [ReplyInline]
+    inlines = (ReplyInline,)
 
-    def short_content(self, obj):
-        return obj.content[:60] + "..." if len(obj.content) > 60 else obj.content
+    def short_content(self, obj: Message) -> str:
+        """Returns a truncated preview of the message content."""
+        if len(obj.content) > self.SHORT_CONTENT_LENGTH:
+            return obj.content[:self.SHORT_CONTENT_LENGTH] + "..."
+        return obj.content
+
     short_content.short_description = "Content"
 
-    def has_replies(self, obj):
+    def has_replies(self, obj: Message) -> bool:
+        """Returns True if the message has at least one reply."""
         return obj.replies.exists()
+
     has_replies.boolean = True
     has_replies.short_description = "Has replies"
