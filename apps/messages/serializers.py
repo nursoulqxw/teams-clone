@@ -8,9 +8,11 @@ from django.utils.translation import gettext_lazy as _
 # Django REST Framework
 from rest_framework.serializers import (
     ModelSerializer,
+    Serializer,
     SerializerMethodField,
     ValidationError,
     CharField,
+    IntegerField,
     PrimaryKeyRelatedField,
 )
 
@@ -191,3 +193,52 @@ class UpdateMessageSerializer(ModelSerializer):
         )
 
         return instance
+
+
+# ── Swagger response serializers ──────────────────────────────────────────────
+
+class MessageListResponseSerializer(Serializer):
+    """Response shape for GET /messages/."""
+
+    message = CharField()
+    count = IntegerField()
+    data = MessageSerializer(many=True)
+
+    class Meta:
+        """Customization of the Serializer metadata."""
+
+        fields = ("message", "count", "data")
+
+
+class MessageDetailResponseSerializer(Serializer):
+    """Response shape for GET /messages/{id}/ and PATCH /messages/{id}/."""
+
+    message = CharField()
+    data = MessageSerializer()
+
+    class Meta:
+        """Customization of the Serializer metadata."""
+
+        fields = ("message", "data")
+
+
+class MessageErrorSerializer(Serializer):
+    """Response shape for error responses."""
+
+    error = CharField()
+
+    class Meta:
+        """Customization of the Serializer metadata."""
+
+        fields = ("error",)
+
+
+class MessageDeletedResponseSerializer(Serializer):
+    """Response shape for DELETE /messages/{id}/."""
+
+    message = CharField()
+
+    class Meta:
+        """Customization of the Serializer metadata."""
+
+        fields = ("message",)
