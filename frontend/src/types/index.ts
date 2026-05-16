@@ -46,8 +46,9 @@ export interface Assignment {
   id: number;
   title: string;
   description?: string;
-  team: number;
-  due_date?: string;
+  team_id: number;
+  due_data?: string;
+  max_points?: number;
   created_at: string;
   status?: string;
 }

@@ -10,7 +10,8 @@ export const createAssignment = (data: {
   title: string;
   description?: string;
   team_id: number;
-  due_date?: string;
+  due_data?: string;
+  max_points?: number;
 }) => api.post<{ data: Assignment }>("/assignment/", data);
 
 export const getAssignment = (id: number) =>

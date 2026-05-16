@@ -1,11 +1,16 @@
+# Python modules
 from typing import Any, TYPE_CHECKING
+
+# Django modules
 from django.contrib.auth.base_user import BaseUserManager
 
 if TYPE_CHECKING:
+    # Project modules
     from apps.users.models import CustomUser
 
 
 class CustomUserManager(BaseUserManager):
+    """Manager for CustomUser model."""
 
     def create_user(
         self,
@@ -13,31 +18,26 @@ class CustomUserManager(BaseUserManager):
         password: str,
         first_name: str,
         last_name: str,
-        *args: tuple,
-        **kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ) -> "CustomUser":
+        """Create and return a regular user."""
 
         if not email:
             raise ValueError("Email must be set")
-
         if not password:
             raise ValueError("Password must be set")
 
         email = self.normalize_email(email)
-
         user = self.model(
             email=email,
             first_name=first_name,
             last_name=last_name,
-            *args,
             **kwargs,
         )
-
         user.set_password(password)
         user.save(using=self._db)
-
         return user
-
 
     def create_superuser(
         self,
@@ -45,9 +45,10 @@ class CustomUserManager(BaseUserManager):
         password: str,
         first_name: str,
         last_name: str,
-        *args: tuple,
-        **kwargs: dict,
+        *args: Any,
+        **kwargs: Any,
     ) -> "CustomUser":
+        """Create and return a superuser."""
 
         kwargs.setdefault("is_staff", True)
         kwargs.setdefault("is_superuser", True)
@@ -55,7 +56,6 @@ class CustomUserManager(BaseUserManager):
 
         if kwargs.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True")
-
         if kwargs.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True")
 
