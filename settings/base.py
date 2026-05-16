@@ -23,13 +23,15 @@ INSTALLED_APPS = [
     "django_filters",
     "channels",
     "django_celery_beat",
-    # Local apps  ← team members will add their apps here
+    "debug_toolbar",
+    "rest_framework_simplejwt.token_blacklist",
+    # Local apps
     "apps.abstract",
     "apps.users",
     "apps.teams",
     "apps.channels",
     "apps.messages",
-    "apps.assigments"
+    "apps.assigments",
 ]
 
 AUTH_USER_MODEL = "users.CustomUser"
@@ -45,6 +47,7 @@ CHANNEL_LAYERS = {
 }
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -54,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 '''
 if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
